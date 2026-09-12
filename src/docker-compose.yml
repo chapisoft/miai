@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  base-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: base-ai-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - POSTGRES_HOST=postgres-vector
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=base_ai_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_HOST=redis-cache
+      - REDIS_PORT=6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - postgres-vector
+      - redis-cache
+    networks:
+      - ai-network
+
+  postgres-vector:
+    image: pgvector/pgvector:pg16
+    container_name: base-ai-pgvector
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: base_ai_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    networks:
+      - ai-network
+
+  redis-cache:
+    image: redis:7-alpine
+    container_name: base-ai-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai-network
+
+volumes:
+  pgvector_data:
+  redis_data:
+
+networks:
+  ai-network:
+    driver: bridge
