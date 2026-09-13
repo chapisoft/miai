@@ -65,7 +65,7 @@ flowchart LR
 | :--- | :--- | :---: | :---: | :---: | :--- |
 | **`QwenLM/Qwen2.5-VL`** | Vision-Language Model thế hệ mới (7B/3B), hiểu ngữ cảnh sâu | **> 96% (Xuất sắc)** | **> 92% (Xuất sắc)** | **5.5 GB** (7B-Q4)<br/>**2.8 GB** (3B-Q4) | **Lựa chọn chuẩn mực số 1:** 1 mô hình duy nhất bóc tách toàn diện chữ in, viết tay, hóa đơn, BoQ và CCCD trực tiếp ra JSON Pydantic. |
 | **`PaddlePaddle/PaddleOCR`** | PP-OCRv4 (DBNet++ Detection + SVTR Recognition) | **> 93% (Rất tốt)** | **~ 82-85% (Khá)** | 0 MB (Chạy CPU) | **Khung OCR truyền thống:** Phù hợp nếu máy chủ không có GPU; đọc bảng BoQ và chữ viết tay kém hơn VLM. |
-| **`pbcquoc/vietocr`** | VGG19/ResNet + Transformer Seq2Seq chuyên biệt Tiếng Việt | **> 95% (Xuất sắc)** | **> 88% (Rất tốt)** | 0 MB (Chạy CPU) | **Chuyên trị tiếng Việt:** Cần kết hợp với bộ cắt ảnh (Detector) bên ngoài, không tự hiểu bố cục tài liệu. |
+| **`pbcquoc/vietocr`** | VGG19/ResNet + Transformer Seq2Seq chuyên biệt Tiếng Việt | **> 95% (Xuất sắc)** | **> 88% (Rất tốt)** | 0 MB (Chạy CPU) | **Chuyên trị tiếng Việt:** Cần kết hợp với bộ cắt ảnh Detector bên ngoài, không tự hiểu bố cục tài liệu. |
 | **`VikParuchuri/surya`** | SegFormer Detection + Multilingual Text & Layout Analysis | **> 90% (Tốt)** | **~ 80% (Khá)** | ~2.0 GB VRAM | Phân tích bố cục tốt, nhưng độ chính xác tiếng Việt viết tay chưa bằng Qwen2.5-VL. |
 | **`microsoft/unilm` (TrOCR)** | Vision Transformer (ViT) + RoBERTa Decoder | **~ 85% (Khá)** | **> 90% (Viết tay EN)** | ~1.5 GB VRAM | Nhận diện chữ viết tay tiếng Anh tốt, cần huấn luyện lại với dữ liệu tiếng Việt. |
 | **`Ucas-HaoranWei/GOT-OCR2.0`** | General OCR Theory 580M tham số | **~ 88% (Khá)** | **~ 86% (Tốt)** | ~1.5 GB VRAM | Nhẹ, xử lý tốt văn bản định dạng và công thức toán học. |

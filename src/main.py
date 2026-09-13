@@ -1,10 +1,11 @@
 """
-Main Entrypoint for base-ai Enterprise Platform.
-FastAPI Application with Swagger OpenAPI 3.0, Prometheus Metrics, and Standardized Error Handling.
+Main Entrypoint for miai Enterprise Platform.
+FastAPI application with 6 AI engines, telemetry, and security.
 """
 
 import time
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -19,11 +20,11 @@ from api.v1.router import api_v1_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Lifecycle event manager for startup and graceful shutdown."""
-    logger.info("Starting base-ai Enterprise AI Platform...", extra={"env": settings.APP_ENV, "port": settings.APP_PORT})
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Lifespan event handler for startup and graceful shutdown."""
+    logger.info("Starting miai Enterprise AI Platform...", extra={"env": settings.APP_ENV, "port": settings.APP_PORT})
     yield
-    logger.info("Shutting down base-ai platform, closing database pools...")
+    logger.info("Shutting down miai platform, closing database pools...")
     await close_database_connections()
 
 
@@ -74,7 +75,7 @@ async def telemetry_middleware(request: Request, call_next):
 # ── 3. Global Exception Handlers ─────────────────────────────────────────────
 @app.exception_handler(BaseAIException)
 async def ai_exception_handler(request: Request, exc: BaseAIException):
-    logger.warning("AI Platform Exception caught", extra={"error_code": exc.error_code.value, "message": exc.message})
+    logger.warning("AI Platform Exception caught", extra={"error_code": exc.error_code.value, "error_detail": exc.message})
     return JSONResponse(
         status_code=exc.status_code,
         content=ApiResponse.error(
@@ -92,7 +93,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=ApiResponse.error(
-            message="Đã xảy ra lỗi hệ thống nội bộ trên máy chủ AI",
+            message="Internal server error occurred on AI platform",
             error_code=ErrorCode.INTERNAL_SERVER_ERROR,
             status_code=500,
             metadata={"detail": str(exc)}
@@ -101,11 +102,11 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 
 # ── 4. Health and Metrics Endpoints ──────────────────────────────────────────
-@app.get("/health", tags=["Health & Monitoring"], summary="Kiểm tra sức khỏe dịch vụ")
+@app.get("/health", tags=["Health & Monitoring"], summary="Service health check")
 async def health_check():
     return {
         "status": "UP",
-        "service": "base-ai",
+        "service": "miai",
         "env": settings.APP_ENV,
         "ollama_base_url": settings.OLLAMA_BASE_URL,
         "timestamp": int(time.time() * 1000)
@@ -118,7 +119,7 @@ async def prometheus_metrics():
     return Response(content=metrics_data, media_type=content_type)
 
 
-@app.get("/", tags=["General"], summary="Cổng thông tin nền tảng base-ai")
+@app.get("/", tags=["General"], summary="Cổng thông tin nền tảng miai")
 async def root_info():
     return ApiResponse.success(
         data={
@@ -135,7 +136,7 @@ async def root_info():
                 "Autonomous Agentic Workflow Engine (ReAct Graph & Tools)"
             ]
         },
-        message="Chào mừng bạn đến với Nền tảng AI Chuẩn Mực Doanh Nghiệp (base-ai)"
+        message="Welcome to Enterprise AI Platform (miai)"
     )
 
 

@@ -11,7 +11,7 @@ from core.telemetry import logger
 
 
 class ConversationGraph:
-    """State Graph Controller for Order Creation Dialogue."""
+    """State Graph Controller for Order Creation Dialogue with Multi-App & Multi-Tenant Support."""
 
     def __init__(self):
         self._active_sessions: Dict[str, DraftOrderResponse] = {}
@@ -21,8 +21,9 @@ class ConversationGraph:
         Processes incoming message, determines state transition, and returns draft.
         """
         draft = await structured_extractor.parse_message(request)
-        self._active_sessions[draft.session_id] = draft
-        logger.info("Processed chat order turn for session %s (Intent: %s, Conf: %s)", draft.session_id, draft.intent, draft.overall_confidence)
+        session_key = f"{request.app_id}:{request.tenant_id}:{draft.session_id}"
+        self._active_sessions[session_key] = draft
+        logger.info("Processed chat order turn for session %s (App: %s, Tenant: %s, Intent: %s, Conf: %s)", draft.session_id, request.app_id, request.tenant_id, draft.intent, draft.overall_confidence)
         return draft
 
     async def confirm_order_turn(self, request: ChatConfirmRequest) -> Dict[str, Any]:
@@ -33,14 +34,18 @@ class ConversationGraph:
             session_id=request.session_id,
             tenant_id=request.tenant_id,
             order_id=request.order_id,
-            corrections=request.corrections
+            corrections=request.corrections,
+            app_id=request.app_id
         )
 
         # Remove from active sessions
-        self._active_sessions.pop(request.session_id, None)
+        session_key = f"{request.app_id}:{request.tenant_id}:{request.session_id}"
+        self._active_sessions.pop(session_key, None)
 
         return {
             "session_id": request.session_id,
+            "app_id": request.app_id,
+            "tenant_id": request.tenant_id,
             "status": "ORDER_CREATED_AND_LEARNED",
             "message": "Đơn hàng đã được xác nhận tạo thành công và tri thức đã được cập nhật vào bộ nhớ gian hàng."
         }

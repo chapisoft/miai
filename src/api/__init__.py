@@ -1,3 +1,3 @@
 """
-FastAPI Routes and Endpoints Package for base-ai.
+FastAPI Routes and Endpoints Package for miai.
 """

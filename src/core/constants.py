@@ -1,5 +1,5 @@
 """
-Global Enums and Constants for base-ai Platform.
+Global Enums and Constants for miai Platform.
 100% Zero-Hardcode and Enum-driven architecture.
 """
 
@@ -104,11 +104,42 @@ class VectorStoreType(str, Enum):
 class ChartType(str, Enum):
     """Supported BI Chart Types."""
     BAR = "BAR"
+    HORIZONTAL_BAR = "HORIZONTAL_BAR"
     LINE = "LINE"
+    AREA_LINE = "AREA_LINE"
     PIE = "PIE"
+    DOUGHNUT = "DOUGHNUT"
+    STACKED_BAR = "STACKED_BAR"
     SCATTER = "SCATTER"
     RADAR = "RADAR"
     TABLE = "TABLE"
+
+
+@unique
+class DatabaseDialect(str, Enum):
+    """Supported SQL Database Dialects."""
+    POSTGRESQL = "POSTGRESQL"
+    CLICKHOUSE = "CLICKHOUSE"
+    MYSQL = "MYSQL"
+    ORACLE = "ORACLE"
+    SQLSERVER = "SQLSERVER"
+
+
+@unique
+class ReportMode(str, Enum):
+    """Micro-Report Template Modes."""
+    GUI = "GUI"
+    SQL = "SQL"
+
+
+@unique
+class ParameterType(str, Enum):
+    """Micro-Report Form Parameter Types."""
+    DATE = "DATE"
+    DATE_RANGE = "DATE_RANGE"
+    SELECT = "SELECT"
+    TEXT = "TEXT"
+    NUMBER = "NUMBER"
 
 
 @unique

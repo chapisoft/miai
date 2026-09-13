@@ -32,7 +32,7 @@ async def chat_completions(
     provider = LLMFactory.get_provider(request.provider, model_override=request.model)
     res = await provider.chat_complete(request)
 
-    return ApiResponse.success(data=res, message="Tạo phản hồi hội thoại thành công")
+    return ApiResponse.success(data=res, message="Chat completion generated successfully")
 
 
 @router.post("/stream", summary="Luồng hội thoại thời gian thực (SSE Streaming)")

@@ -14,7 +14,7 @@ class ApiResponse(BaseModel, Generic[T]):
     """Unified API Response envelope."""
     code: int = Field(default=200, description="HTTP status code")
     status: str = Field(default="SUCCESS", description="SUCCESS or ERROR")
-    message: str = Field(default="Thành công", description="User-friendly localized message")
+    message: str = Field(default="Success", description="Standard API status message in English")
     errorCode: Optional[ErrorCode] = Field(default=ErrorCode.SUCCESS, description="Enum Error Code")
     data: Optional[T] = Field(default=None, description="Payload data")
     metadata: Optional[Dict[str, Any]] = Field(default=None, description="Pagination or diagnostic info")
@@ -24,7 +24,7 @@ class ApiResponse(BaseModel, Generic[T]):
     def success(
         cls,
         data: Optional[T] = None,
-        message: str = "Thực thi thành công",
+        message: str = "Success",
         metadata: Optional[Dict[str, Any]] = None
     ) -> "ApiResponse[T]":
         return cls(

@@ -1,5 +1,5 @@
 """
-Pytest configuration and shared fixtures for base-ai testing.
+Pytest configuration and shared fixtures for miai testing.
 """
 
 import pytest

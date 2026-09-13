@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 
 class SqlGenResult(BaseModel):
     sql: str = Field(description="Generated pure SQL SELECT query")
-    explanation: str = Field(description="Explanation of the query logic in Vietnamese")
+    explanation: str = Field(description="Explanation of the query logic. MUST match the exact language of the user prompt (Vietnamese for Vietnamese prompt, English for English prompt, etc.)")
 
 
 class SqlQueryGenerator:
@@ -39,21 +39,23 @@ class SqlQueryGenerator:
         schema_context = SchemaInspector.get_formatted_schema_context(database_target, tables_hint)
 
         system_instruction = (
-            f"Bạn là chuyên gia cơ sở dữ liệu và phân tích dữ liệu kinh doanh (BI Expert) trên hệ thống {database_target.upper()}. "
-            "Dưới đây là cấu trúc từ điển dữ liệu (Data Dictionary):\n"
+            f"You are an enterprise Database and Business Intelligence Expert for {database_target.upper()}.\n"
+            "Data Dictionary Schema:\n"
             f"{schema_context}\n\n"
-            "QUY TẮC BẮT BUỘC:\n"
-            "1. Chỉ sinh DUY NHẤT câu truy vấn `SELECT` đọc dữ liệu.\n"
-            "2. Sử dụng tên bảng và tên cột chính xác như trong Schema.\n"
-            "3. Luôn sử dụng bí danh bảng (Alias) và tên cột rõ ràng cho các hàm gom nhóm (SUM, COUNT, AVG...).\n"
-            "4. Thêm mệnh đề `LIMIT` phù hợp."
+            "MANDATORY RULES:\n"
+            "1. Generate ONLY a single pure `SELECT` read-only query.\n"
+            "2. Use exact table and column names as defined in the Schema.\n"
+            "3. Always use proper table aliases and meaningful column names for aggregations (SUM, COUNT, AVG...).\n"
+            "4. Add an appropriate `LIMIT` clause.\n"
+            "5. LANGUAGE MATCHING: The `explanation` field MUST strictly match the exact language of the user prompt "
+            "(e.g., if the user prompt is in Vietnamese, write the explanation in Vietnamese; if in English, write in English)."
         )
 
         llm = LLMFactory.get_provider(provider or ModelProvider.OLLAMA, model_override=self.model)
 
         structured_res = await StructuredExtractor.extract(
             provider=llm,
-            prompt=f"Câu hỏi nghiệp vụ: {prompt}",
+            prompt=f"User Query / Prompt: {prompt}",
             schema=SqlGenResult,
             system_instruction=system_instruction,
             model=self.model

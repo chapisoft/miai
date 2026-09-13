@@ -13,7 +13,7 @@ from core.config import settings
 
 # ── 1. Structured JSON ECS Logger ───────────────────────────────────────────
 
-def setup_logger(name: str = "base-ai") -> logging.Logger:
+def setup_logger(name: str = "miai") -> logging.Logger:
     """Configures structured logger outputting Elastic Common Schema (ECS) format."""
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
@@ -34,7 +34,7 @@ def setup_logger(name: str = "base-ai") -> logging.Logger:
     return logger
 
 
-logger = setup_logger("base-ai")
+logger = setup_logger("miai")
 
 # ── 2. Prometheus Metrics ───────────────────────────────────────────────────
 

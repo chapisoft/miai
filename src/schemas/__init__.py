@@ -1,5 +1,5 @@
 """
-Pydantic Schemas & DTOs for base-ai Platform.
+Pydantic Schemas & DTOs for miai Platform.
 """
 
 from schemas.chat import ChatMessage, ChatRequest, ChatResponse, StreamChunk

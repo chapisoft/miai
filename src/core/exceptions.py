@@ -1,5 +1,5 @@
 """
-Exception Hierarchy for base-ai Platform.
+Exception Hierarchy for miai Platform.
 Provides domain-specific exceptions mapped to standardized ErrorCodes.
 """
 
@@ -27,7 +27,7 @@ class SecurityException(BaseAIException):
     """Exception raised on security or authentication failures."""
     def __init__(
         self,
-        message: str = "Yêu cầu không hợp lệ hoặc không có quyền truy cập",
+        message: str = "Unauthorized: Invalid request or insufficient permissions",
         error_code: ErrorCode = ErrorCode.UNAUTHORIZED,
         status_code: int = 401,
         details: Optional[Dict[str, Any]] = None
@@ -39,7 +39,7 @@ class PromptInjectionException(BaseAIException):
     """Exception raised when prompt injection attack is detected."""
     def __init__(
         self,
-        message: str = "Phát hiện dấu hiệu tấn công Prompt Injection, yêu cầu bị từ chối",
+        message: str = "Prompt injection detected. Request rejected.",
         details: Optional[Dict[str, Any]] = None
     ):
         super().__init__(
@@ -90,7 +90,7 @@ class UnsafeSqlException(BaseAIException):
     """Exception raised when generated SQL contains unsafe or non-read-only commands."""
     def __init__(
         self,
-        message: str = "Truy vấn SQL không an toàn: Chỉ cho phép câu lệnh SELECT",
+        message: str = "Unsafe SQL query: Only read-only SELECT statements are allowed",
         details: Optional[Dict[str, Any]] = None
     ):
         super().__init__(

@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     # Security & Tokens
     API_KEY: Optional[str] = Field(default=None, description="Static API Key for machine-to-machine auth")
-    JWT_SECRET_KEY: str = Field(default="base-ai-default-jwt-secret-key-2026", description="JWT secret key")
+    JWT_SECRET_KEY: str = Field(default="miai-default-jwt-secret-key-2026", description="JWT secret key")
     JWT_ALGORITHM: str = Field(default="HS256", description="JWT Algorithm")
     REQUIRE_AUTH: bool = Field(default=False, description="Enforce API Key or JWT authentication")
 
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     DEFAULT_LLM_MODEL: str = Field(default="qwen2.5:7b", description="Default Chat LLM model")
     DEFAULT_VISION_MODEL: str = Field(default="qwen2.5vl:7b", description="Default Vision LLM model")
     DEFAULT_EMBEDDING_MODEL: str = Field(default="bge-m3", description="Default Embedding model")
-    DEFAULT_CODER_MODEL: str = Field(default="qwen2.5-coder:7b", description="Default Code/SQL model")
+    DEFAULT_CODER_MODEL: str = Field(default="qwen2.5:7b", description="Default Code/SQL model")
 
     # Cloud AI Providers
     OPENAI_API_KEY: Optional[str] = Field(default=None, description="OpenAI API Key")

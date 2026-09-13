@@ -37,7 +37,7 @@ async def generate_sql_query(
             is_safe=True
         )
 
-    return ApiResponse.success(data=result, message="Sinh truy vấn SQL thành công")
+    return ApiResponse.success(data=result, message="SQL query generated successfully")
 
 
 @router.post("/chart", response_model=ApiResponse[ChartDataResponse], summary="Tự động sinh cấu hình biểu đồ ECharts và Insight báo cáo")
@@ -55,4 +55,4 @@ async def generate_chart_report(
     )
     query_result = await SqlExecutor.execute_query(sql, explanation, database_target=request.database_target)
     chart_res = ChartFormatter.format_chart(query_result, prompt=request.prompt, preferred_chart=chart_type)
-    return ApiResponse.success(data=chart_res, message="Tạo báo cáo biểu đồ thành công")
+    return ApiResponse.success(data=chart_res, message="Chart report generated successfully")

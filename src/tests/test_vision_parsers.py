@@ -153,10 +153,12 @@ async def test_invoice_text_parse_fallback():
 async def test_boq_table_parsing():
     """Tests BoQ parser creates structured rows and handles estimates."""
     ocr_table = """
-    STT | Mô tả công việc | Khối lượng | Đơn giá
-    1   | Cung cấp lắp đặt trạm FDI Vision | 4 | 25000000
-    2   | Tích hợp mô hình AI Qwen2.5-VL  | 1 | 50000000
+    STT | Mã hiệu | Mô tả công việc | Khối lượng | Đơn giá
+    1   | CV-001  | Cung cấp lắp đặt trạm FDI Vision | 4 | 25000000
+    2   | CV-002  | Tích hợp mô hình AI Qwen2.5-VL  | 1 | 50000000
     """
     boq = await BoqParser.parse_text(ocr_table)
     assert len(boq.rows) > 0
-    assert boq.rows[0].item_code is not None
+    assert boq.rows[0].description is not None
+    assert boq.rows[0].quantity == 4.0
+

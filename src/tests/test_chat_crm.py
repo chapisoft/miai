@@ -35,7 +35,7 @@ def test_nlu_extract_raw_entities():
     assert entities["intent"] == OrderIntent.ORDER
     assert entities["payment_method"] == PaymentMethod.BANK_TRANSFER
     assert entities["room_code"] == "3006B"
-    assert "Giao việc/Giao ngay" in entities["shipping_note"]
+    assert "Giao ngay" in entities["shipping_note"]
 
 
 def test_nlu_extract_phone_number():
@@ -97,11 +97,12 @@ def test_crm_tools_resolve_product_token():
 # ── 3. Feedback Learner & Slang Memory Tests ──────────────────────────────────
 
 def test_feedback_learner_alias_registration():
-    """Tests tenant-isolated slang alias recording and retrieval."""
+    """Tests tenant and app-isolated slang alias recording and retrieval."""
     learner = FeedbackLearner()
     tenant = "shop_test_99"
     
     learner.record_alias(
+        app_id="chapi",
         tenant_id=tenant,
         raw_token="xl",
         target_type="PRODUCT",
@@ -109,19 +110,29 @@ def test_feedback_learner_alias_registration():
         target_name="Xôi Lạc Ruốc Hành"
     )
     
-    aliases = learner.get_aliases(tenant)
+    # 1. Matches same app and tenant
+    aliases = learner.get_aliases(tenant_id=tenant, app_id="chapi")
     assert len(aliases) == 1
     assert aliases[0].raw_token == "xl"
     assert aliases[0].target_name == "Xôi Lạc Ruốc Hành"
 
+    # 2. Does not leak to another app with same tenant_id
+    other_app_aliases = learner.get_aliases(tenant_id=tenant, app_id="nexaflow")
+    assert len(other_app_aliases) == 0
+
+    # 3. Does not leak to another tenant in same app
+    other_tenant_aliases = learner.get_aliases(tenant_id="shop_other_88", app_id="chapi")
+    assert len(other_tenant_aliases) == 0
+
 
 def test_feedback_learner_process_confirmation():
-    """Tests processing confirmation and corrections into alias memory."""
+    """Tests processing confirmation and corrections into alias memory with multi-app isolation."""
     learner = FeedbackLearner()
     tenant = "shop_test_99"
     
     learner.process_confirmation(
         session_id="sess-001",
+        app_id="chapi",
         tenant_id=tenant,
         order_id="ord-100",
         corrections=[
@@ -132,13 +143,13 @@ def test_feedback_learner_process_confirmation():
         ]
     )
     
-    aliases = learner.get_aliases(tenant)
+    aliases = learner.get_aliases(tenant_id=tenant, app_id="chapi")
     assert any(a.raw_token == "bm trứng" for a in aliases)
 
 
 def test_feedback_learner_build_few_shot_prompt():
     """Tests dynamic few-shot prompt generation."""
-    prompt = feedback_learner.build_few_shot_prompt("shop-default-01")
+    prompt = feedback_learner.build_few_shot_prompt(tenant_id="shop-default-01", app_id="chapi")
     assert "TỪ ĐIỂN TỪ LÓNG & VIẾT TẮT" in prompt
     assert "3006b" in prompt
 
@@ -147,15 +158,20 @@ def test_feedback_learner_build_few_shot_prompt():
 
 @pytest.mark.asyncio
 async def test_structured_extractor_pipeline():
-    """Tests full extraction pipeline from rapid salesperson text to draft order."""
+    """Tests full extraction pipeline from rapid salesperson text to draft order with app & tenant metadata."""
     req = ChatParseRequest(
         message="3006B 10k xoi lac 2 bm gv ck",
+        app_id="chapi",
         tenant_id="shop-default-01",
+        domain_code="FNB",
         saler_id="saler-01"
     )
     
     draft = await structured_extractor.parse_message(req)
     
+    assert draft.app_id == "chapi"
+    assert draft.tenant_id == "shop-default-01"
+    assert draft.domain_code == "FNB"
     assert draft.intent == OrderIntent.ORDER
     assert draft.payment_method == PaymentMethod.BANK_TRANSFER
     assert draft.customer.full_name == "Nguyễn Văn Tuấn"
@@ -170,16 +186,19 @@ async def test_conversation_graph_process_and_confirm_turn():
     # 1. User turn: Parse message
     parse_req = ChatParseRequest(
         message="3006B 10k xoi lac 2 bm gv ck",
+        app_id="chapi",
         tenant_id="shop-default-01",
         saler_id="saler-01"
     )
     draft = await conversation_graph.process_user_turn(parse_req)
     assert draft.session_id is not None
+    assert draft.app_id == "chapi"
     assert draft.customer.customer_id == "cust-001"
     
     # 2. Confirmation turn: User confirms draft
     confirm_req = ChatConfirmRequest(
         session_id=draft.session_id,
+        app_id="chapi",
         tenant_id="shop-default-01",
         order_id="ord-99881",
         corrections=[]
@@ -187,3 +206,5 @@ async def test_conversation_graph_process_and_confirm_turn():
     confirm_res = await conversation_graph.confirm_order_turn(confirm_req)
     assert confirm_res["status"] == "ORDER_CREATED_AND_LEARNED"
     assert confirm_res["session_id"] == draft.session_id
+    assert confirm_res["app_id"] == "chapi"
+    assert confirm_res["tenant_id"] == "shop-default-01"

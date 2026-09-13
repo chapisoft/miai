@@ -1,5 +1,5 @@
 """
-Core Foundation Module for base-ai Platform.
+Core Foundation Module for miai Platform.
 Provides configuration, security, database session, telemetry, and common standards.
 """
 

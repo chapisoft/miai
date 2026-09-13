@@ -1,3 +1,3 @@
 """
-Automated Test Suite for base-ai Platform.
+Automated Test Suite for miai Platform.
 """

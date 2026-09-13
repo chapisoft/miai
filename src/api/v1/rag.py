@@ -22,7 +22,7 @@ async def ingest_document(
     chunks = await pipeline.ingest_document(document)
     return ApiResponse.success(
         data=chunks,
-        message=f"Đã nạp và phân rã thành công {len(chunks)} đoạn tri thức vào hệ thống"
+        message="Knowledge chunks ingested successfully"
     )
 
 
@@ -34,7 +34,7 @@ async def hybrid_search(
 ) -> ApiResponse[SearchResult]:
     """Performs hybrid retrieval returning the most relevant document chunks."""
     result = await pipeline.search(query)
-    return ApiResponse.success(data=result, message="Truy xuất dữ liệu thành công")
+    return ApiResponse.success(data=result, message="Data retrieved successfully")
 
 
 @router.post("/query", response_model=ApiResponse[RAGResponse], summary="Hỏi đáp thông minh tổng hợp từ tài liệu (RAG QA)")
@@ -45,4 +45,4 @@ async def rag_query(
 ) -> ApiResponse[RAGResponse]:
     """Retrieves relevant context and generates a synthesized answer."""
     rag_ans = await pipeline.answer(query=query.query, top_k=query.top_k)
-    return ApiResponse.success(data=rag_ans, message="Tổng hợp câu trả lời thành công")
+    return ApiResponse.success(data=rag_ans, message="Answer synthesized successfully")

@@ -29,20 +29,20 @@ class AstSqlValidator:
         """
         cleaned = sql_text.strip().rstrip(";")
         if not cleaned:
-            raise UnsafeSqlException(message="Câu lệnh SQL rỗng")
+            raise UnsafeSqlException(message="SQL query is empty")
 
         # Parse statements
         parsed = sqlparse.parse(cleaned)
         if len(parsed) != 1:
             raise UnsafeSqlException(
-                message="Chỉ cho phép duy nhất 1 câu truy vấn SELECT, nghiêm cấm xếp chồng nhiều câu lệnh (Stacked Queries)"
+                message="Only a single SELECT statement is allowed. Stacked queries are prohibited."
             )
 
         statement: Statement = parsed[0]
         st_type = statement.get_type()
         if st_type != "SELECT":
             raise UnsafeSqlException(
-                message=f"Loại câu lệnh không hợp lệ: '{st_type}'. Hệ thống chỉ chấp nhận câu lệnh SELECT đọc dữ liệu."
+                message=f"Invalid statement type: '{st_type}'. Only read-only SELECT queries are permitted."
             )
 
         # Token stream inspection
@@ -51,7 +51,7 @@ class AstSqlValidator:
             # Check for isolated forbidden keywords
             if re.search(r"\b" + re.escape(kw) + r"\b", sql_upper):
                 raise UnsafeSqlException(
-                    message=f"Phát hiện từ khóa nguy hiểm bị cấm tuyệt đối: '{kw}'"
+                    message=f"Forbidden keyword detected: '{kw}'"
                 )
 
         # Enforce or inject LIMIT

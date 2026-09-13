@@ -27,7 +27,7 @@ async def generate_meeting_minutes(
     )
     minutes = await MeetingSummarizer.summarize_meeting(segments)
     minutes.transcript_segments = segments
-    return ApiResponse.success(data=minutes, message="Tóm tắt biên bản họp thành công")
+    return ApiResponse.success(data=minutes, message="Meeting minutes generated successfully")
 
 
 @router.post("/call-quality", response_model=ApiResponse[CallScoreDto], summary="Giám sát và chấm điểm chất lượng cuộc gọi tổng đài")
@@ -42,4 +42,4 @@ async def evaluate_call_quality(
         diarize=True
     )
     score_dto = await CallCenterEvaluator.evaluate_call(segments)
-    return ApiResponse.success(data=score_dto, message="Chấm điểm cuộc gọi thành công")
+    return ApiResponse.success(data=score_dto, message="Call evaluated successfully")

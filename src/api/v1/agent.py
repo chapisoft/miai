@@ -20,4 +20,4 @@ async def run_autonomous_agent(
     Executes autonomous reasoning loop with dynamic tool execution.
     """
     result = await ReActAgentGraph.run(request)
-    return ApiResponse.success(data=result, message="Thực thi tác nhân tự trị hoàn tất")
+    return ApiResponse.success(data=result, message="Autonomous agent execution completed")

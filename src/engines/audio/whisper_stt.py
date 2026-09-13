@@ -37,7 +37,7 @@ class WhisperSttDriver:
                 speaker="Trưởng nhóm Kỹ thuật",
                 start_time=13.0,
                 end_time=28.0,
-                text="Báo cáo giám đốc, toàn bộ module base-ai đã hoàn thiện trên GPU RTX 3060 và sẵn sàng kết nối API."
+                text="Báo cáo giám đốc, toàn bộ module miai đã hoàn thiện trên GPU RTX 3060 và sẵn sàng kết nối API."
             ),
             SpeakerSegment(
                 speaker="Chủ tọa (Giám đốc)",

@@ -9,12 +9,12 @@ from core.telemetry import logger
 
 
 class FeedbackLearner:
-    """Manages tenant-specific token mappings and few-shot memory."""
+    """Manages app and tenant-isolated token mappings and few-shot memory."""
 
     def __init__(self):
-        # In-memory dictionary: tenant_id -> list of AliasItemDto
+        # In-memory dictionary: "app_id:tenant_id" -> { raw_token: AliasItemDto }
         self._tenant_aliases: Dict[str, Dict[str, AliasItemDto]] = {
-            "shop-default-01": {
+            "chapi:shop-default-01": {
                 "bm": AliasItemDto(
                     raw_token="bm",
                     target_type="PRODUCT",
@@ -40,9 +40,16 @@ class FeedbackLearner:
         }
         self._session_history: List[Dict[str, Any]] = []
 
-    def get_aliases(self, tenant_id: str) -> List[AliasItemDto]:
-        """Return all learned aliases for a tenant."""
-        aliases_map = self._tenant_aliases.get(tenant_id, {})
+    def _get_namespace_key(self, app_id: str, tenant_id: str) -> str:
+        return f"{app_id}:{tenant_id}"
+
+    def get_aliases(self, tenant_id: str, app_id: str = "chapi") -> List[AliasItemDto]:
+        """Return all learned aliases for an app and tenant."""
+        ns_key = self._get_namespace_key(app_id, tenant_id)
+        aliases_map = self._tenant_aliases.get(ns_key, {})
+        if not aliases_map and app_id == "chapi":
+            # Fallback to legacy single tenant_id key if present
+            aliases_map = self._tenant_aliases.get(tenant_id, {})
         return list(aliases_map.values())
 
     def record_alias(
@@ -51,15 +58,17 @@ class FeedbackLearner:
         raw_token: str,
         target_type: str,
         target_id: str,
-        target_name: str
+        target_name: str,
+        app_id: str = "chapi"
     ) -> AliasItemDto:
-        """Store or increment usage count of an alias for a tenant."""
-        if tenant_id not in self._tenant_aliases:
-            self._tenant_aliases[tenant_id] = {}
+        """Store or increment usage count of an alias for an app and tenant."""
+        ns_key = self._get_namespace_key(app_id, tenant_id)
+        if ns_key not in self._tenant_aliases:
+            self._tenant_aliases[ns_key] = {}
 
         token_key = raw_token.strip().lower()
-        if token_key in self._tenant_aliases[tenant_id]:
-            item = self._tenant_aliases[tenant_id][token_key]
+        if token_key in self._tenant_aliases[ns_key]:
+            item = self._tenant_aliases[ns_key][token_key]
             item.usage_count += 1
             item.target_id = target_id
             item.target_name = target_name
@@ -72,8 +81,8 @@ class FeedbackLearner:
             target_name=target_name,
             usage_count=1
         )
-        self._tenant_aliases[tenant_id][token_key] = new_item
-        logger.info("Learned new alias for tenant %s: '%s' -> %s (%s)", tenant_id, token_key, target_name, target_id)
+        self._tenant_aliases[ns_key][token_key] = new_item
+        logger.info("Learned new alias for app=%s, tenant=%s: '%s' -> %s (%s)", app_id, tenant_id, token_key, target_name, target_id)
         return new_item
 
     def process_confirmation(
@@ -81,12 +90,14 @@ class FeedbackLearner:
         session_id: str,
         tenant_id: str,
         order_id: Optional[str],
-        corrections: List[CorrectionItemDto]
+        corrections: List[CorrectionItemDto],
+        app_id: str = "chapi"
     ) -> None:
-        """Process saler confirmation and correction feedback."""
+        """Process saler confirmation and correction feedback for app and tenant."""
         for corr in corrections:
             if corr.corrected_product_id:
                 self.record_alias(
+                    app_id=app_id,
                     tenant_id=tenant_id,
                     raw_token=corr.raw_token,
                     target_type="PRODUCT",
@@ -95,6 +106,7 @@ class FeedbackLearner:
                 )
             elif corr.corrected_customer_id:
                 self.record_alias(
+                    app_id=app_id,
                     tenant_id=tenant_id,
                     raw_token=corr.raw_token,
                     target_type="CUSTOMER",
@@ -104,14 +116,15 @@ class FeedbackLearner:
 
         self._session_history.append({
             "session_id": session_id,
+            "app_id": app_id,
             "tenant_id": tenant_id,
             "order_id": order_id,
             "corrections_count": len(corrections)
         })
 
-    def build_few_shot_prompt(self, tenant_id: str) -> str:
+    def build_few_shot_prompt(self, tenant_id: str, app_id: str = "chapi") -> str:
         """Generate dynamic few-shot in-context learning string for System Prompt."""
-        aliases = self.get_aliases(tenant_id)
+        aliases = self.get_aliases(tenant_id=tenant_id, app_id=app_id)
         if not aliases:
             return ""
 

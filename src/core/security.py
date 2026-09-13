@@ -79,14 +79,14 @@ async def verify_auth_token(
             return context
         except jwt.PyJWTError as e:
             raise SecurityException(
-                message="Phiên làm việc JWT không hợp lệ hoặc đã hết hạn",
+                message="Invalid or expired JWT session",
                 error_code=ErrorCode.UNAUTHORIZED,
                 status_code=401,
                 details={"error": str(e)}
             )
 
     raise SecurityException(
-        message="Yêu cầu bị từ chối: Thiếu khóa X-API-Key hoặc Bearer Token hợp lệ",
+        message="Unauthorized: Missing valid X-API-Key or Bearer Token",
         error_code=ErrorCode.UNAUTHORIZED,
         status_code=401
     )

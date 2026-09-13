@@ -35,22 +35,42 @@ class BoqParser:
             )
         except Exception as e:
             logger.info("LLM structured extraction unavailable (%s), using table regex parser", str(e))
-            # Fallback line-by-line parser for standard table outputs
             rows: List[BoqRowDto] = []
             lines = [line.strip() for line in ocr_text.splitlines() if line.strip()]
             stt = 1
             for line in lines:
-                parts = re.split(r"\s{2,}|\t|\|", line)
-                if len(parts) >= 3 and not any(header in line.lower() for header in ["stt", "hạng mục", "khối lượng", "đơn giá"]):
-                    desc = parts[0] if not parts[0].isdigit() else (parts[1] if len(parts) > 1 else parts[0])
+                parts = [p.strip() for p in re.split(r"\s{2,}|\t|\|", line) if p.strip()]
+                if len(parts) >= 3 and not any(header in line.lower() for header in ["stt", "hạng mục", "khối lượng", "đơn giá", "mã hiệu"]):
+                    stt_str = parts[0] if parts[0].isdigit() else str(stt)
+                    item_code = parts[1] if len(parts) > 1 and ("CV-" in parts[1] or "AF." in parts[1] or len(parts[1]) < 15) else f"CV-{str(stt).zfill(3)}"
+                    desc = parts[2] if len(parts) > 2 else parts[0]
+                    
+                    # Try to parse quantity and unit price from trailing parts
+                    qty = 1.0
+                    u_price = 0.0
+                    numeric_parts = []
+                    for p in parts[3:]:
+                        try:
+                            clean_num = re.sub(r"[^\d.]", "", p)
+                            if clean_num:
+                                numeric_parts.append(float(clean_num))
+                        except ValueError:
+                            pass
+                    
+                    if len(numeric_parts) >= 2:
+                        qty = numeric_parts[0]
+                        u_price = numeric_parts[1]
+                    elif len(numeric_parts) == 1:
+                        qty = numeric_parts[0]
+                    
                     rows.append(BoqRowDto(
-                        stt=str(stt),
-                        item_code=f"CV-{str(stt).zfill(3)}",
+                        stt=stt_str,
+                        item_code=item_code,
                         description=desc,
-                        unit="m2",
-                        quantity=100.0,
-                        unit_price=250000.0,
-                        total_price=25000000.0
+                        unit="gói",
+                        quantity=qty,
+                        unit_price=u_price,
+                        total_price=qty * u_price if u_price > 0 else 0.0
                     ))
                     stt += 1
 

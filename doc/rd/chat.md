@@ -1,6 +1,6 @@
 # THIẾT KẾ GIẢI PHÁP TRỢ LÝ CHAT CRM TẠO ĐƠN HÀNG THÔNG MINH
 
-Tài liệu này đặc tả chi tiết giải pháp kỹ thuật, lựa chọn mô hình AI cốt lõi, danh mục các kho mã nguồn mở (GitHub) tái sử dụng và cơ chế tự học thích ứng cho tính năng **Trợ lý Chat CRM tạo đơn hàng nhanh dành cho nhân viên bán hàng (Saler)** trong hệ sinh thái `miai` và `chapi`.
+Tài liệu này đặc tả chi tiết giải pháp kỹ thuật, lựa chọn mô hình AI cốt lõi, danh mục các kho mã nguồn mở (GitHub) tái sử dụng và cơ chế tự học thích ứng cho tính năng **Trợ lý Chat CRM tạo đơn hàng nhanh dành cho nhân viên bán hàng** trong hệ sinh thái `miai` và `chapi`.
 
 ---
 
@@ -34,7 +34,7 @@ flowchart LR
 | :--- | :--- | :--- | :--- |
 | **Mô hình AI Lõi** | [`QwenLM/Qwen2.5-7B-Instruct`](https://github.com/QwenLM/Qwen2.5) | Đọc hiểu câu lệnh tiếng Việt, suy luận thực thể và gọi Tools | Top 1 mô hình mở tiếng Việt hiện nay; hỗ trợ Function Calling cực mạnh; nạp gọn gàng trong 5.2 GB VRAM RTX 3060. |
 | **Trích xuất Cấu trúc** | [`jxnl/instructor`](https://github.com/jxnl/instructor) | Ép đầu ra LLM tuân thủ 100% Pydantic Schema | Bọc trực tiếp qua Ollama API Client; tự động bẫy lỗi Schema và sửa lỗi ngữ nghĩa trước khi trả về Backend. |
-| **Quản trị Luồng Hội thoại** | [`langchain-ai/langgraph`](https://github.com/langchain-ai/langgraph) | Quản lý trạng thái đơn hàng nháp và vòng lặp tương tác | Xây dựng State Graph phân nhánh: Tự động lên đơn $\rightarrow$ Hỏi lại điểm mơ hồ $\rightarrow$ Popup tạo mới $\rightarrow$ Chốt đơn. |
+| **Quản trị Luồng Hội thoại** | [`langchain-ai/langgraph`](https://github.com/langchain-ai/langgraph) | Quản lý trạng thái đơn hàng nháp và vòng lặp tương tác | Xây dựng State Graph phân nhánh: Tự động lên đơn → Hỏi lại điểm mơ hồ → Popup tạo mới → Chốt đơn. |
 | **Xử lý Ngôn ngữ Tiếng Việt** | [`underthesea/underthesea`](https://github.com/underthesea/underthesea) | Tiền xử lý, tách từ (Word Tokenizer), chuẩn hóa telex | Thư viện NLP tiếng Việt chuẩn mực; phát hiện nhanh cụm danh từ sản phẩm và tên riêng khách hàng. |
 | **Tìm kiếm & Định danh CSDL** | `pgvector/pgvector` + `pg_trgm` | So khớp ngữ nghĩa và tìm kiếm mờ Khách hàng/Sản phẩm | Tích hợp trực tiếp trên PostgreSQL của CRM; phản hồi tìm kiếm trong < 20 mili-giây. |
 
@@ -55,7 +55,7 @@ flowchart LR
     subgraph S_STEP_3_4 ["BƯỚC 3 & BƯỚC 4: SUY LUẬN VÀ QUẢN TRỊ TRẠNG THÁI"]
         direction TB
         B3_INSTRUCTOR["Bước 3: Suy luận & Ép kiểu Pydantic (150ms)<br/>• Qwen2.5-7B tổng hợp thông tin và gán Slot Filling<br/>• Instructor xuất DraftOrderSchema kèm Confidence Score"]
-        B4_GRAPH["Bước 4: LangGraph điều phối tương tác<br/>• Confidence >= 90%: Trả Card đơn hàng nháp chốt 1 chạm<br/>• Confidence < 90%: Trả câu hỏi làm rõ kèm nút bấm nhanh"]
+        B4_GRAPH["Bước 4: LangGraph điều phối tương tác<br/>• Confidence ≥ 90%: Trả Card đơn hàng nháp chốt 1 chạm<br/>• Confidence < 90%: Trả câu hỏi làm rõ kèm nút bấm nhanh"]
         B3_INSTRUCTOR --> B4_GRAPH
     end
 
@@ -66,21 +66,21 @@ flowchart LR
 
 ## 3. CƠ CHẾ TỰ HỌC THÍCH ỨNG (DYNAMIC FEW-SHOT IN-CONTEXT LEARNING)
 
-Hệ thống đạt được khả năng **tự học và thích ứng liên tục với ngôn ngữ riêng của từng Shop/Saler** mà **không cần huấn luyện lại mô hình (Fine-tuning)** tốn kém tài nguyên:
+Hệ thống đạt được khả năng **tự học và thích ứng liên tục với ngôn ngữ riêng của từng Shop/Nhân viên bán hàng** mà **không cần huấn luyện lại mô hình (Fine-tuning)** tốn kém tài nguyên:
 
 ```mermaid
 %%{init: {'flowchart': {'nodeSpacing': 8, 'rankSpacing': 140, 'padding': 3, 'curve': 'basis'}}}%%
 flowchart LR
     subgraph S_FEEDBACK_CAPTURE ["1. GHI NHẬN SỰ KIỆN PHẢN HỒI (SALER FEEDBACK)"]
         direction TB
-        E_CONFIRM["Saler xác nhận / sửa đơn hàng<br/>• Bấm 'Xác nhận tạo đơn' trên giao diện chat<br/>• Hoặc bấm đổi món/sửa giá trên Card đơn nháp"]
-        E_RECORD["Lưu vết vào CSDL Tri thức<br/>• Ghi nhận cặp: (Câu lệnh gốc -> Kết quả đúng 100%)<br/>• Cập nhật bảng tenant_product_alias và chat_learning_log"]
+        E_CONFIRM["Nhân viên bán hàng xác nhận / sửa đơn hàng<br/>• Bấm 'Xác nhận tạo đơn' trên giao diện chat<br/>• Hoặc bấm đổi món/sửa giá trên Card đơn nháp"]
+        E_RECORD["Lưu vết vào CSDL Tri thức<br/>• Ghi nhận cặp: (Câu lệnh gốc → Kết quả đúng 100%)<br/>• Cập nhật bảng tenant_product_alias và chat_learning_log"]
         E_CONFIRM --> E_RECORD
     end
 
     subgraph S_DYNAMIC_INJECTION ["2. NẠP ĐỘNG VÀO PROMPT TRUY VẤN MỚI"]
         direction TB
-        E_RETRIEVE["Truy vấn ví dụ tương đồng (RAG Few-Shot)<br/>• Khi Saler cùng Shop gửi tin nhắn mới<br/>• pgvector tìm 3 ví dụ đã chốt đơn gần nhất của Shop đó"]
+        E_RETRIEVE["Truy vấn ví dụ tương đồng (RAG Few-Shot)<br/>• Khi nhân viên bán hàng cùng Shop gửi tin nhắn mới<br/>• pgvector tìm 3 ví dụ đã chốt đơn gần nhất của Shop đó"]
         E_PROMPT["Bơm động vào System Prompt của Qwen2.5<br/>• Mô hình lập tức hiểu ngữ nghĩa từ lóng riêng của Shop<br/>• Độ chính xác tăng từ 75% lên > 98% chỉ sau 1-2 lần sửa"]
         E_RETRIEVE --> E_PROMPT
     end
@@ -89,24 +89,24 @@ flowchart LR
 ```
 
 ### 3.1. Cấu trúc System Prompt động nạp tri thức học tập
-Khi Saler gửi tin nhắn, hệ thống tự động sinh System Prompt cá nhân hóa theo từng Tenant:
+Khi nhân viên bán hàng gửi tin nhắn, hệ thống tự động sinh System Prompt cá nhân hóa theo từng Tenant:
 
 ```text
 Bạn là Trợ lý AI Bán hàng CRM chuyên nghiệp của gian hàng [TENANT_NAME].
-Nhiệm vụ: Phân tích câu lệnh của Saler và trích xuất thông tin đơn hàng chính xác.
+Nhiệm vụ: Phân tích câu lệnh của nhân viên bán hàng và trích xuất thông tin đơn hàng chính xác.
 
 === TỪ ĐIỂN TỪ LÓNG & VIẾT TẮT ĐÃ HỌC CỦA GIAN HÀNG NÀY ===
-- "bm" -> Sản phẩm: "Bánh mì Pate Cột Đèn" (ID: prod-01)
-- "xoi lac" -> Sản phẩm: "Xôi Lạc Ruốc Hành" (ID: prod-05)
-- "3006B" -> Khách hàng: "Anh Hùng - Căn hộ 3006 Tòa B" (SĐT: 0988123456)
-- "ck" -> Phương thức thanh toán: "BANK_TRANSFER"
-- "gv" -> Ghi chú: "Giao việc / Giao hàng ngay"
+- "bm" → Sản phẩm: "Bánh mì Pate Cột Đèn" (ID: prod-01)
+- "xoi lac" → Sản phẩm: "Xôi Lạc Ruốc Hành" (ID: prod-05)
+- "3006B" → Khách hàng: "Anh Hùng - Căn hộ 3006 Tòa B" (SĐT: 0988123456)
+- "ck" → Phương thức thanh toán: "BANK_TRANSFER"
+- "gv" → Ghi chú: "Giao việc / Giao hàng ngay"
 
 === CÁC VÍ DỤ CHỐT ĐƠN TƯƠNG TỰ ĐÃ XÁC NHẬN GẦN ĐÂY CỦA SHOP ===
-Saler: "3006B 10k xoi lac 2 bm gv"
--> Kết quả: Khách "3006B", Items: [Xôi Lạc Ruốc Hành x 1 (10.000đ), Bánh mì Pate x 2], Ghi chú: "Giao ngay"
+Nhân viên bán hàng: "3006B 10k xoi lac 2 bm gv"
+→ Kết quả: Khách "3006B", Items: [Xôi Lạc Ruốc Hành x 1 (10.000đ), Bánh mì Pate x 2], Ghi chú: "Giao ngay"
 
-Hãy phân tích câu lệnh sau của Saler và trả về kết quả theo Schema Pydantic:
+Hãy phân tích câu lệnh sau của nhân viên bán hàng và trả về kết quả theo Schema Pydantic:
 ```
 
 ---
@@ -156,7 +156,7 @@ class DraftOrderResponse(BaseModel):
     total_order_amount: Optional[float] = Field(default=None, description="Tổng tiền đơn hàng")
     payment_method: PaymentMethodEnum = Field(default=PaymentMethodEnum.CASH)
     shipping_note: Optional[str] = Field(default=None, description="Ghi chú giao hàng")
-    needs_clarification: bool = Field(default=False, description="Cần hỏi lại Saler không")
+    needs_clarification: bool = Field(default=False, description="Cần hỏi lại nhân viên bán hàng không")
     clarification_question: Optional[str] = Field(default=None, description="Câu hỏi làm rõ nếu có điểm mơ hồ")
     quick_options: Optional[List[str]] = Field(default=None, description="Các nút bấm chọn nhanh gợi ý")
 ```
@@ -176,7 +176,7 @@ src/
 │       ├── crm_tools.py             # Bộ công cụ tra cứu CRM CSDL (Customer, Product, Stock)
 │       ├── structured_extractor.py  # Gọi Qwen2.5-7B qua Instructor ép kiểu Pydantic
 │       ├── conversation_graph.py    # LangGraph State Machine quản trị hội thoại & xác nhận
-│       └── feedback_learner.py      # Ghi nhận phản hồi Saler, nạp động Few-Shot RAG
+│       └── feedback_learner.py      # Ghi nhận phản hồi nhân viên bán hàng, nạp động Few-Shot RAG
 ├── schemas/
 │   └── chat_crm.py                  # Pydantic Schemas mô hình hóa dữ liệu Chat-to-Order
 └── api/
