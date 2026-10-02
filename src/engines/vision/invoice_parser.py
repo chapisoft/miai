@@ -4,22 +4,24 @@ Specialized extractor for Vietnamese electronic invoices into InvoiceDto with ar
 """
 
 import re
-from typing import Optional
-from schemas.vision import InvoiceDto, InvoiceItemDto
-from engines.llm.structured import StructuredExtractor
-from engines.llm.factory import LLMFactory
+from typing import Optional, List, Dict, Any
+from core.config import settings
 from core.constants import ModelProvider
+from engines.llm.factory import LLMFactory
+from engines.llm.structured import StructuredExtractor
+from schemas.vision import InvoiceDto, InvoiceItemDto
 from core.telemetry import logger
 
 
 class InvoiceParser:
-    """Extracts structured VAT Invoice data with arithmetic validation."""
+    """Specialized Parser for Electronic VAT Invoices (Hóa đơn điện tử VAT) & Scale Slips."""
 
     SYSTEM_PROMPT = (
-        "Bạn là chuyên gia bóc tách hóa đơn điện tử giá trị gia tăng (VAT) Việt Nam. "
-        "Hãy trích xuất chính xác: Số hóa đơn, Ký hiệu, Ngày lập, Mã số thuế người bán/người mua, "
-        "Tên người bán/người mua, danh mục chi tiết từng mặt hàng (tên, số lượng, đơn giá, thành tiền), "
-        "tiền hàng, tiền thuế VAT và tổng tiền thanh toán."
+        "Bạn là chuyên gia kế toán kiểm toán bóc tách hóa đơn điện tử VAT. "
+        "Hãy trích xuất chính xác: Số hóa đơn, ký hiệu mẫu, ngày phát hành, thông tin đơn vị bán "
+        "(tên, mã số thuế, địa chỉ), thông tin đơn vị mua (tên, mã số thuế, địa chỉ), "
+        "danh mục chi tiết từng dòng hàng hóa dịch vụ (tên hàng, số lượng, đơn giá, thành tiền), "
+        "thuế suất GTGT, tiền thuế GTGT và tổng tiền thanh toán đã bao gồm thuế."
     )
 
     @classmethod
@@ -45,7 +47,7 @@ class InvoiceParser:
         date_match = re.search(r"(?:Ngày|Date):\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})", ocr_text, re.IGNORECASE)
 
         try:
-            llm = LLMFactory.get_provider(provider or ModelProvider.OLLAMA)
+            llm = LLMFactory.get_provider(provider or settings.DEFAULT_LLM_PROVIDER)
             result = await StructuredExtractor.extract(
                 provider=llm,
                 prompt=f"Nội dung văn bản bóc tách từ hóa đơn VAT:\n{ocr_text}",

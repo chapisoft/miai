@@ -1,44 +1,62 @@
 version: '3.8'
 
 services:
-  miai:
+  base-ai:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: miai-app
     restart: unless-stopped
     ports:
-      - "8006:8000"
+      - "${APP_PORT_HOST:-127.0.0.1:8006}:8000"
     environment:
       - APP_ENV=production
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
-      - POSTGRES_HOST=postgres-vector
+      - APP_NAME=miai
+      - DEFAULT_LLM_PROVIDER=VLLM
+      - VLLM_BASE_URL=http://vllm-engine:8000/v1
+      - VLLM_DEFAULT_MODEL=Qwen/Qwen2.5-7B-Instruct-AWQ
+      - EMBEDDING_PROVIDER=LOCAL_CPU
+      - POSTGRES_HOST=postgres-db
       - POSTGRES_PORT=5432
       - POSTGRES_DB=miai_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=micro
+      - POSTGRES_PASSWORD=Micro@31122020
       - REDIS_HOST=redis-cache
       - REDIS_PORT=6379
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      - postgres-vector
       - redis-cache
     networks:
       - ai-network
+      - databases_default
 
-  postgres-vector:
-    image: pgvector/pgvector:pg16
-    container_name: miai-pgvector
+  vllm-engine:
+    image: vllm/vllm-openai:latest
+    container_name: miai-vllm
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     ports:
-      - "5433:5432"
+      - "${VLLM_PORT_HOST:-127.0.0.1:8002}:8000"
     environment:
-      POSTGRES_DB: miai_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
     volumes:
-      - pgvector_data:/var/lib/postgresql/data
+      - /data/uc2-ai/huggingface_cache:/root/.cache/huggingface
+    command: >
+      --model Qwen/Qwen2.5-7B-Instruct-AWQ
+      --quantization awq
+      --gpu-memory-utilization 0.85
+      --max-model-len 8192
+      --max-num-seqs 16
+      --enable-auto-tool-choice
+      --tool-call-parser hermes
+      --port 8000
     networks:
       - ai-network
 
@@ -47,16 +65,18 @@ services:
     container_name: miai-redis
     restart: unless-stopped
     ports:
-      - "6380:6379"
+      - "${REDIS_PORT_HOST:-6380}:6379"
     volumes:
       - redis_data:/data
     networks:
       - ai-network
 
 volumes:
-  pgvector_data:
   redis_data:
+  huggingface_cache:
 
 networks:
   ai-network:
     driver: bridge
+  databases_default:
+    external: true

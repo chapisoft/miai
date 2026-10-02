@@ -21,7 +21,7 @@ from api.dependencies import get_current_user
 router = APIRouter(prefix="/chat-crm", tags=["CRM AI Quick Order Chat"])
 
 
-@router.post("/parse", response_model=ApiResponse[DraftOrderResponse], summary="Đọc hiểu tin nhắn bán hàng và tạo đơn nháp")
+@router.post("/parse", response_model=ApiResponse[DraftOrderResponse], summary="Parse sales chat message and generate draft order")
 async def parse_chat_message(
     request: ChatParseRequest,
     current_user: dict = Depends(get_current_user)
@@ -31,7 +31,7 @@ async def parse_chat_message(
     return ApiResponse.success(data=result, message="Message parsed and order draft created successfully")
 
 
-@router.post("/confirm", response_model=ApiResponse[Dict[str, Any]], summary="Xác nhận tạo đơn và lưu vết tri thức học tập")
+@router.post("/confirm", response_model=ApiResponse[Dict[str, Any]], summary="Confirm order and persist learned knowledge")
 async def confirm_order(
     request: ChatConfirmRequest,
     current_user: dict = Depends(get_current_user)
@@ -41,10 +41,10 @@ async def confirm_order(
     return ApiResponse.success(data=result, message="Order confirmed and knowledge updated successfully")
 
 
-@router.get("/aliases", response_model=ApiResponse[AliasListResponse], summary="Lấy danh mục từ lóng và ánh xạ đã học của gian hàng")
+@router.get("/aliases", response_model=ApiResponse[AliasListResponse], summary="Get learned product slang and alias mappings")
 async def get_tenant_aliases(
-    app_id: str = Query(default="chapi", description="ID ứng dụng / dịch vụ"),
-    tenant_id: str = Query(default="shop-default-01", description="ID gian hàng"),
+    app_id: str = Query(default="chapi", description="App / Service ID"),
+    tenant_id: str = Query(default="shop-default-01", description="Tenant ID"),
     current_user: dict = Depends(get_current_user)
 ) -> ApiResponse[AliasListResponse]:
     """Retrieves all learned aliases and token mappings for the app and tenant."""
@@ -55,7 +55,7 @@ async def get_tenant_aliases(
     )
 
 
-@router.post("/aliases", response_model=ApiResponse[AliasItemDto], summary="Thêm thủ công từ lóng / cấu hình viết tắt cho gian hàng")
+@router.post("/aliases", response_model=ApiResponse[AliasItemDto], summary="Manually register alias abbreviation for tenant")
 async def create_tenant_alias(
     request: AliasCreateRequest,
     current_user: dict = Depends(get_current_user)

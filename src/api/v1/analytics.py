@@ -15,12 +15,12 @@ router = APIRouter(prefix="/analytics", tags=["Text-to-SQL & BI Reporting"])
 sql_generator = SqlQueryGenerator()
 
 
-@router.post("/text-to-sql", response_model=ApiResponse[SqlQueryResult], summary="Chuyển đổi ngôn ngữ tự nhiên thành SQL an toàn")
+@router.post("/text-to-sql", response_model=ApiResponse[SqlQueryResult], summary="Translate natural language to safe SQL query")
 async def generate_sql_query(
     request: TextToSqlRequest,
     current_user: dict = Depends(get_current_user)
 ) -> ApiResponse[SqlQueryResult]:
-    """Translates Vietnamese prompt into safe Read-Only SQL statement and optionally executes it."""
+    """Translates natural language prompt into safe Read-Only SQL statement and optionally executes it."""
     sql, explanation = await sql_generator.generate_sql(
         prompt=request.prompt,
         database_target=request.database_target,
@@ -40,7 +40,7 @@ async def generate_sql_query(
     return ApiResponse.success(data=result, message="SQL query generated successfully")
 
 
-@router.post("/chart", response_model=ApiResponse[ChartDataResponse], summary="Tự động sinh cấu hình biểu đồ ECharts và Insight báo cáo")
+@router.post("/chart", response_model=ApiResponse[ChartDataResponse], summary="Generate Apache ECharts configuration and analytical insights")
 async def generate_chart_report(
     request: TextToSqlRequest,
     chart_type: ChartType = ChartType.BAR,

@@ -111,3 +111,15 @@ class AgentExecutionException(BaseAIException):
         details: Optional[Dict[str, Any]] = None
     ):
         super().__init__(message, error_code, status_code, details)
+
+
+class FaceBiometricsException(BaseAIException):
+    """Exception raised during face detection, recognition or liveness verification."""
+    def __init__(
+        self,
+        message: str,
+        error_code: ErrorCode = ErrorCode.FACE_DETECTION_ERROR,
+        status_code: int = 400,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(message, error_code, status_code, details)

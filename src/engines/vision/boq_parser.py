@@ -4,19 +4,20 @@ Extracts complex tables from tender dossiers and project cost estimates.
 """
 
 import re
-from typing import Optional, List
-from schemas.vision import BoqTableDto, BoqRowDto
-from engines.llm.structured import StructuredExtractor
-from engines.llm.factory import LLMFactory
+from typing import Optional, List, Dict, Any
+from core.config import settings
 from core.constants import ModelProvider
+from engines.llm.factory import LLMFactory
+from engines.llm.structured import StructuredExtractor
+from schemas.vision import BoqTableDto, BoqRowDto
 from core.telemetry import logger
 
 
 class BoqParser:
-    """Extracts structured Bill of Quantities data from bidding documents."""
+    """Specialized Parser for Bills of Quantities (BoQ) and Construction Cost Estimates."""
 
     SYSTEM_PROMPT = (
-        "Bạn là chuyên gia bóc tách bảng khối lượng dự toán công trình và hồ sơ mời thầu (BoQ). "
+        "Bạn là chuyên gia thẩm định hồ sơ dự toán xây dựng và bảng BoQ (Bill of Quantities) đấu thầu. "
         "Hãy trích xuất chính xác: Tên dự án/gói thầu, tiêu đề bảng, danh mục từng dòng công việc "
         "(STT, mã hiệu, mô tả chi tiết, đơn vị tính, khối lượng mời thầu, đơn giá và thành tiền nếu có), "
         "cùng tổng giá trị dự toán."
@@ -26,7 +27,7 @@ class BoqParser:
     async def parse_text(cls, ocr_text: str, provider: Optional[ModelProvider] = None) -> BoqTableDto:
         """Parses raw text extracted from BoQ document into validated BoqTableDto."""
         try:
-            llm = LLMFactory.get_provider(provider or ModelProvider.OLLAMA)
+            llm = LLMFactory.get_provider(provider or settings.DEFAULT_LLM_PROVIDER)
             return await StructuredExtractor.extract(
                 provider=llm,
                 prompt=f"Nội dung bảng kê BoQ dự toán:\n{ocr_text}",

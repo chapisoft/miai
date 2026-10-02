@@ -26,8 +26,8 @@ from api.dependencies import get_current_user
 router = APIRouter(prefix="/vision", tags=["Vision AI & Document OCR"])
 
 
-@router.post("/ocr/extract", response_model=ApiResponse[OcrGeneralResponse], summary="OCR tổng quát nhận diện text và tọa độ")
-@router.post("/ocr", response_model=ApiResponse[OcrGeneralResponse], summary="Nhận diện ký tự quang học (OCR)")
+@router.post("/ocr/extract", response_model=ApiResponse[OcrGeneralResponse], summary="Extract general OCR text and bounding boxes")
+@router.post("/ocr", response_model=ApiResponse[OcrGeneralResponse], summary="General Optical Character Recognition (OCR)")
 async def extract_ocr(
     request: OcrRequest,
     current_user: dict = Depends(get_current_user)
@@ -37,18 +37,18 @@ async def extract_ocr(
     return ApiResponse.success(data=result, message="OCR text extracted successfully")
 
 
-@router.post("/identity/extract", response_model=ApiResponse[IdentityCardResponse], summary="Bóc tách giấy tờ tùy thân (CCCD / Hộ chiếu / GPLX)")
+@router.post("/identity/extract", response_model=ApiResponse[IdentityCardResponse], summary="Extract identity documents (ID card / Passport / Driver License)")
 async def extract_identity_card(
     request: IdentityCardRequest,
     current_user: dict = Depends(get_current_user)
 ) -> ApiResponse[IdentityCardResponse]:
-    """Parses Vietnamese CCCD, CMND, Passport, or Driver License with checksum validation."""
+    """Parses CCCD, CMND, Passport, or Driver License with checksum validation."""
     result = await identity_parser.parse_identity_document(request)
     return ApiResponse.success(data=result, message="Identity document parsed successfully")
 
 
-@router.post("/invoice/extract", response_model=ApiResponse[InvoiceDto], summary="Bóc tách hóa đơn điện tử GTGT (VAT Invoice)")
-@router.post("/invoice", response_model=ApiResponse[InvoiceDto], summary="Bóc tách hóa đơn điện tử GTGT")
+@router.post("/invoice/extract", response_model=ApiResponse[InvoiceDto], summary="Extract electronic VAT invoice")
+@router.post("/invoice", response_model=ApiResponse[InvoiceDto], summary="Extract electronic VAT invoice")
 async def extract_vat_invoice(
     request: OcrRequest,
     current_user: dict = Depends(get_current_user)
@@ -59,8 +59,8 @@ async def extract_vat_invoice(
     return ApiResponse.success(data=parsed_invoice, message="VAT invoice parsed successfully")
 
 
-@router.post("/fdi/extract", response_model=ApiResponse[FdiFormDto], summary="Bóc tách biểu mẫu FDI Form Station rảnh tay")
-@router.post("/fdi-form", response_model=ApiResponse[FdiFormDto], summary="Bóc tách biểu mẫu FDI")
+@router.post("/fdi/extract", response_model=ApiResponse[FdiFormDto], summary="Extract FDI Form Station documents")
+@router.post("/fdi-form", response_model=ApiResponse[FdiFormDto], summary="Extract FDI Form Station documents")
 async def extract_fdi_form(
     template_code: str = "FDI_INBOUND_DELIVERY_V1",
     current_user: dict = Depends(get_current_user)
@@ -69,10 +69,10 @@ async def extract_fdi_form(
     mock_detected_text = {
         "po_number": "PO-FDI-2026-9901",
         "delivery_date": "2026-09-12",
-        "vendor_name": "Công ty TNHH Cơ Khí Chính Xác Precision Tech",
+        "vendor_name": "Precision Tech Industrial Co., Ltd",
         "net_weight": "14250.5",
         "gross_weight": "15680.0",
-        "driver_name": "Nguyễn Văn Tuấn",
+        "driver_name": "Tuan Nguyen",
         "vehicle_plate": "29C-889.23",
         "first_weight": "15680.0",
         "second_weight": "14250.5",
@@ -86,8 +86,8 @@ async def extract_fdi_form(
     return ApiResponse.success(data=extracted_form, message="FDI form parsed successfully")
 
 
-@router.post("/boq/extract", response_model=ApiResponse[BoqTableDto], summary="Bóc tách bảng khối lượng dự toán đấu thầu (BoQ Table)")
-@router.post("/boq", response_model=ApiResponse[BoqTableDto], summary="Bóc tách bảng BoQ")
+@router.post("/boq/extract", response_model=ApiResponse[BoqTableDto], summary="Extract Bill of Quantities (BoQ) table")
+@router.post("/boq", response_model=ApiResponse[BoqTableDto], summary="Extract Bill of Quantities (BoQ) table")
 async def extract_boq_table(
     request: OcrRequest,
     current_user: dict = Depends(get_current_user)

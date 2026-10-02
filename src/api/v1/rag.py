@@ -12,7 +12,7 @@ from api.dependencies import get_rag_pipeline, get_current_user
 router = APIRouter(prefix="/rag", tags=["Hybrid RAG & Knowledge Base"])
 
 
-@router.post("/documents", response_model=ApiResponse[List[DocumentChunk]], summary="Nạp tài liệu vào kho tri thức Vector")
+@router.post("/documents", response_model=ApiResponse[List[DocumentChunk]], summary="Ingest documents into Vector knowledge base")
 async def ingest_document(
     document: DocumentCreate,
     pipeline: HybridRAGPipeline = Depends(get_rag_pipeline),
@@ -26,7 +26,7 @@ async def ingest_document(
     )
 
 
-@router.post("/search", response_model=ApiResponse[SearchResult], summary="Tìm kiếm tri thức lai (Dense Vector + BM25 + Rerank)")
+@router.post("/search", response_model=ApiResponse[SearchResult], summary="Hybrid knowledge search (Dense Vector + BM25 + Rerank)")
 async def hybrid_search(
     query: SearchQuery,
     pipeline: HybridRAGPipeline = Depends(get_rag_pipeline),
@@ -37,7 +37,7 @@ async def hybrid_search(
     return ApiResponse.success(data=result, message="Data retrieved successfully")
 
 
-@router.post("/query", response_model=ApiResponse[RAGResponse], summary="Hỏi đáp thông minh tổng hợp từ tài liệu (RAG QA)")
+@router.post("/query", response_model=ApiResponse[RAGResponse], summary="Synthesize RAG question answer from documents")
 async def rag_query(
     query: SearchQuery,
     pipeline: HybridRAGPipeline = Depends(get_rag_pipeline),

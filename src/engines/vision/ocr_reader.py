@@ -31,7 +31,7 @@ class OcrReader:
             "số liệu và nhãn có trong hình ảnh này một cách chính xác nhất."
         )
 
-        llm = LLMFactory.get_provider(ModelProvider.OLLAMA, model_override=self.vision_model)
+        llm = LLMFactory.get_provider(settings.DEFAULT_LLM_PROVIDER, model_override=self.vision_model)
 
         chat_req = ChatRequest(
             messages=[ChatMessage(role=MessageRole.USER, content=f"{prompt}\n[IMAGE_DATA_ATTACHED]")],

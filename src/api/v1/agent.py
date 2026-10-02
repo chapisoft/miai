@@ -11,7 +11,7 @@ from api.dependencies import get_current_user
 router = APIRouter(prefix="/agent", tags=["Autonomous Agent & Tool Calling"])
 
 
-@router.post("/run", response_model=ApiResponse[AgentRunResponse], summary="Khởi chạy tác vụ Tác nhân Tự trị (ReAct Workflow)")
+@router.post("/run", response_model=ApiResponse[AgentRunResponse], summary="Execute autonomous agent workflow (ReAct loop)")
 async def run_autonomous_agent(
     request: AgentRunRequest,
     current_user: dict = Depends(get_current_user)

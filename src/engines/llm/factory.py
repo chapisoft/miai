@@ -8,6 +8,7 @@ from core.config import settings
 from core.constants import ModelProvider
 from core.exceptions import LLMProviderException
 from engines.llm.base import BaseLLMProvider
+from engines.llm.vllm_provider import VLLMProvider
 from engines.llm.ollama_provider import OllamaProvider
 from engines.llm.openai_provider import OpenAIProvider
 from engines.llm.gemini_provider import GeminiProvider
@@ -26,20 +27,23 @@ class LLMFactory:
     ) -> BaseLLMProvider:
         """
         Returns an instance for the requested provider.
-        Defaults to local OLLAMA running on micro-server RTX 3060.
+        Defaults to high-throughput vLLM engine on micro-server RTX 3060.
         """
-        p_type = provider_type or ModelProvider.OLLAMA
+        p_type = provider_type or settings.DEFAULT_LLM_PROVIDER
 
-        if p_type == ModelProvider.OLLAMA:
+        if p_type == ModelProvider.VLLM:
+            return VLLMProvider(
+                base_url=settings.VLLM_BASE_URL,
+                default_model=model_override or settings.VLLM_DEFAULT_MODEL
+            )
+
+        elif p_type == ModelProvider.OLLAMA:
             return OllamaProvider(
                 base_url=settings.OLLAMA_BASE_URL,
                 default_model=model_override or settings.DEFAULT_LLM_MODEL
             )
 
         elif p_type == ModelProvider.OPENAI:
-            if not settings.OPENAI_API_KEY:
-                # Return provider anyway, error will occur if called without key
-                pass
             return OpenAIProvider(
                 api_key=settings.OPENAI_API_KEY,
                 base_url=settings.OPENAI_BASE_URL,
@@ -53,7 +57,7 @@ class LLMFactory:
                 default_model=model_override or "gemini-1.5-flash"
             )
 
-        elif p_type in (ModelProvider.DEEPSEEK, ModelProvider.VLLM, ModelProvider.CUSTOM):
+        elif p_type in (ModelProvider.DEEPSEEK, ModelProvider.CUSTOM):
             # Uses OpenAI compatible interface
             return OpenAIProvider(
                 api_key=settings.DEEPSEEK_API_KEY,

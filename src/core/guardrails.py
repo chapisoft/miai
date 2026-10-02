@@ -3,7 +3,8 @@ AI Safety Guardrails: Prompt Injection Detection and PII Redaction.
 """
 
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Optional
+import numpy as np
 from core.exceptions import PromptInjectionException
 
 # Patterns indicative of prompt injection / jailbreak attempts
@@ -58,3 +59,50 @@ class Guardrails:
         for pattern, replacement in PII_PATTERNS:
             redacted_text = re.sub(pattern, replacement, redacted_text)
         return redacted_text
+
+    @staticmethod
+    def redact_face_pii(
+        image_np: np.ndarray,
+        faces: Optional[list] = None,
+        method: str = "pixelate",
+        blur_strength: float = 3.0,
+    ) -> np.ndarray:
+        """
+        Masks / blurs human faces in images to protect PII privacy (Decree 13/2023/ND-CP).
+        Uses UniFace BlurFace utility.
+        """
+        if image_np is None or image_np.size == 0:
+            return image_np
+
+        from uniface.privacy import BlurFace
+        from uniface.types import Face
+
+        blurrer = BlurFace(method=method, blur_strength=blur_strength)
+        if faces is None or len(faces) == 0:
+            # Fallback: if no faces provided, return image unmodified
+            return image_np
+
+        face_objs = []
+        for f in faces:
+            if isinstance(f, Face):
+                face_objs.append(f)
+            elif isinstance(f, (list, tuple)) and len(f) >= 4:
+                face_objs.append(Face(
+                    bbox=np.array([float(f[0]), float(f[1]), float(f[2]), float(f[3])], dtype=np.float32),
+                    confidence=1.0,
+                    landmarks=np.zeros((5, 2), dtype=np.float32)
+                ))
+            elif isinstance(f, dict) and "bbox" in f:
+                b = f["bbox"]
+                face_objs.append(Face(
+                    bbox=np.array([float(b[0]), float(b[1]), float(b[2]), float(b[3])], dtype=np.float32),
+                    confidence=float(f.get("confidence", 1.0)),
+                    landmarks=np.array(f.get("landmarks", np.zeros((5, 2))), dtype=np.float32)
+                ))
+
+        if not face_objs:
+            return image_np
+
+        result = blurrer.anonymize(image_np, face_objs)
+        return result if result is not None else image_np
+

@@ -4,19 +4,19 @@ Extracts structured executive summary and deliverables table from audio transcri
 """
 
 from typing import List, Optional
-from schemas.audio import MeetingMinutesDto, SpeakerSegment, ActionItemDto
-from engines.llm.structured import StructuredExtractor
-from engines.llm.factory import LLMFactory
+from core.config import settings
 from core.constants import ModelProvider
+from engines.llm.factory import LLMFactory
+from engines.llm.structured import StructuredExtractor
+from schemas.audio import MeetingMinutesDto, SpeakerSegment
 
 
 class MeetingSummarizer:
-    """Summarizes transcribed meetings into structured minutes."""
+    """Extracts executive summaries and action items from meeting transcriptions."""
 
     SYSTEM_PROMPT = (
-        "Bạn là thư ký điều hành cấp cao của doanh nghiệp. "
-        "Dựa trên nội dung bóc băng cuộc họp, hãy trích xuất: Tiêu đề cuộc họp, người tham dự, "
-        "tóm tắt nội dung chính, các quyết định quan trọng và danh sách công việc giao phó (Action Items) "
+        "Bạn là thư ký cuộc họp AI chuyên nghiệp. Hãy đọc bản ghi nội dung cuộc họp "
+        "và tóm tắt lại các điểm chính, các quyết định đã thống nhất, và trích xuất danh sách đầu việc "
         "kèm người phụ trách và thời hạn cụ thể."
     )
 
@@ -29,7 +29,7 @@ class MeetingSummarizer:
         """Processes transcription segments and returns structured MeetingMinutesDto."""
         full_transcript = "\n".join([f"[{s.speaker}]: {s.text}" for s in segments])
 
-        llm = LLMFactory.get_provider(provider or ModelProvider.OLLAMA)
+        llm = LLMFactory.get_provider(provider or settings.DEFAULT_LLM_PROVIDER)
         return await StructuredExtractor.extract(
             provider=llm,
             prompt=f"Nội dung bóc băng cuộc họp:\n{full_transcript}",

@@ -8,6 +8,7 @@ import uuid
 import json
 from typing import List, Optional, Dict, Any
 from schemas.agent import AgentRunRequest, AgentRunResponse, AgentStepDto
+from core.config import settings
 from core.constants import AgentStatus, ModelProvider
 from engines.agent.state import AgentState
 from engines.agent.tools import ToolRegistry
@@ -61,7 +62,7 @@ class ReActAgentGraph:
             "2. Khi đã có đủ thông tin để kết luận: Điền `thought`, `final_answer` (lời giải đáp đầy đủ bằng tiếng Việt), và để `action = null`."
         )
 
-        llm = LLMFactory.get_provider(provider or ModelProvider.OLLAMA)
+        llm = LLMFactory.get_provider(provider or settings.DEFAULT_LLM_PROVIDER)
         history_steps: List[AgentStepDto] = []
 
         while state.current_step < state.max_steps:

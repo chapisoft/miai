@@ -10,6 +10,7 @@ from api.v1.analytics import router as analytics_router
 from api.v1.audio import router as audio_router
 from api.v1.agent import router as agent_router
 from api.v1.chat_crm import router as chat_crm_router
+from api.v1.face import router as face_router
 
 api_v1_router = APIRouter()
 
@@ -20,4 +21,6 @@ api_v1_router.include_router(analytics_router)
 api_v1_router.include_router(audio_router)
 api_v1_router.include_router(agent_router)
 api_v1_router.include_router(chat_crm_router)
+api_v1_router.include_router(face_router)
+
 

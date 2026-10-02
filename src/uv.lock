@@ -1537,6 +1537,7 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "sqlparse" },
     { name = "tiktoken" },
+    { name = "uniface", extra = ["cpu"] },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -1583,6 +1584,7 @@ requires-dist = [
     { name = "sqlparse", specifier = ">=0.4.4" },
     { name = "tiktoken", specifier = ">=0.6.0" },
     { name = "torch", marker = "extra == 'ml'", specifier = ">=2.2.0" },
+    { name = "uniface", extras = ["cpu"], specifier = ">=4.0.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.28.0" },
 ]
 provides-extras = ["ml", "dev"]
@@ -3809,6 +3811,30 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a3/26/b09b8010994eccc3c09092e6b34058f36a460eea2d4c3e8b910c695975a0/typing_inspection-0.4.4.tar.gz", hash = "sha256:547274fa6b0a561ccf549cc9524b999a578e737d015d8709d021f9d0d13bea47", size = 76928, upload-time = "2026-08-12T12:37:25.997Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl", hash = "sha256:65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147", size = 14750, upload-time = "2026-08-12T12:37:24.648Z" },
+]
+
+[[package]]
+name = "uniface"
+version = "4.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "opencv-python" },
+    { name = "requests" },
+    { name = "scikit-image" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ec/37/a3362a8e570799ff981bf0410a7492f50447d416b24f6a4da6123fd72312/uniface-4.0.0.tar.gz", hash = "sha256:12f90f11b4d921d8a54ce88c698c29c7da373afec465f280c4fc7c2d6a3ae543", size = 134775, upload-time = "2026-08-14T14:56:29.409Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/21/70/255794e8040fd9e08068056d1607147d3055b82890d8c95cd600b0eb8f95/uniface-4.0.0-py3-none-any.whl", hash = "sha256:1dce410a2a1dddaec156b8d279cce5b8814c3e677d199e7d403fd7403852b66b", size = 160421, upload-time = "2026-08-14T14:56:28.179Z" },
+]
+
+[package.optional-dependencies]
+cpu = [
+    { name = "onnxruntime" },
 ]
 
 [[package]]

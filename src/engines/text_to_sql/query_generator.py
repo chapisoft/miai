@@ -51,7 +51,7 @@ class SqlQueryGenerator:
             "(e.g., if the user prompt is in Vietnamese, write the explanation in Vietnamese; if in English, write in English)."
         )
 
-        llm = LLMFactory.get_provider(provider or ModelProvider.OLLAMA, model_override=self.model)
+        llm = LLMFactory.get_provider(provider or settings.DEFAULT_LLM_PROVIDER, model_override=self.model)
 
         structured_res = await StructuredExtractor.extract(
             provider=llm,

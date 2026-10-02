@@ -14,7 +14,7 @@ router = APIRouter(prefix="/audio", tags=["Audio & Speech-to-Text"])
 whisper_driver = WhisperSttDriver()
 
 
-@router.post("/meeting-minutes", response_model=ApiResponse[MeetingMinutesDto], summary="Bóc băng và tóm tắt biên bản họp tự động")
+@router.post("/meeting-minutes", response_model=ApiResponse[MeetingMinutesDto], summary="Transcribe and summarize meeting minutes automatically")
 async def generate_meeting_minutes(
     request: AudioTranscribeRequest,
     current_user: dict = Depends(get_current_user)
@@ -30,7 +30,7 @@ async def generate_meeting_minutes(
     return ApiResponse.success(data=minutes, message="Meeting minutes generated successfully")
 
 
-@router.post("/call-quality", response_model=ApiResponse[CallScoreDto], summary="Giám sát và chấm điểm chất lượng cuộc gọi tổng đài")
+@router.post("/call-quality", response_model=ApiResponse[CallScoreDto], summary="Evaluate call center voice quality and agent compliance")
 async def evaluate_call_quality(
     request: AudioTranscribeRequest,
     current_user: dict = Depends(get_current_user)

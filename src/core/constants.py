@@ -33,6 +33,12 @@ class ErrorCode(str, Enum):
     HOMOGRAPHY_TRANSFORM_FAILED = "HOMOGRAPHY_TRANSFORM_FAILED"
     TEMPLATE_MATCH_FAILED = "TEMPLATE_MATCH_FAILED"
     
+    # Face Biometrics & Identity Errors
+    FACE_DETECTION_ERROR = "FACE_DETECTION_ERROR"
+    FACE_RECOGNITION_ERROR = "FACE_RECOGNITION_ERROR"
+    FACE_SPOOF_DETECTED = "FACE_SPOOF_DETECTED"
+    FACE_QUALITY_TOO_LOW = "FACE_QUALITY_TOO_LOW"
+    
     # Text-to-SQL Errors
     SQL_SYNTAX_ERROR = "SQL_SYNTAX_ERROR"
     UNSAFE_SQL_QUERY_BLOCKED = "UNSAFE_SQL_QUERY_BLOCKED"
@@ -57,6 +63,7 @@ class ModelProvider(str, Enum):
     ANTHROPIC = "ANTHROPIC"
     DEEPSEEK = "DEEPSEEK"
     VLLM = "VLLM"
+    LOCAL_CPU = "LOCAL_CPU"
     CUSTOM = "CUSTOM"
 
 
@@ -79,6 +86,7 @@ class TaskType(str, Enum):
     TEXT_TO_SQL = "TEXT_TO_SQL"
     AUDIO_STT = "AUDIO_STT"
     AGENTIC_WORKFLOW = "AGENTIC_WORKFLOW"
+    FACE_BIOMETRICS = "FACE_BIOMETRICS"
 
 
 @unique
@@ -176,4 +184,84 @@ class PaymentMethod(str, Enum):
     CASH = "CASH"
     BANK_TRANSFER = "BANK_TRANSFER"
     COD = "COD"
+
+
+@unique
+class FaceDetectorType(str, Enum):
+    """Supported Face Detection Models."""
+    SCRFD = "SCRFD"
+    RETINAFACE = "RETINAFACE"
+    CENTERFACE = "CENTERFACE"
+    YOLOV8_FACE = "YOLOV8_FACE"
+
+
+@unique
+class FaceRecognizerType(str, Enum):
+    """Supported Face Recognition / Embedding Models."""
+    ADAFACE_IR50 = "ADAFACE_IR50"
+    ARCFACE_RESNET50 = "ARCFACE_RESNET50"
+    ARCFACE_MOBILENET = "ARCFACE_MOBILENET"
+    EDGEFACE_XXS = "EDGEFACE_XXS"
+
+
+@unique
+class FaceAnonymizeMethod(str, Enum):
+    """Privacy Anonymization Methods."""
+    PIXELATE = "pixelate"
+    GAUSSIAN = "gaussian"
+    BLACKOUT = "blackout"
+    ELLIPTICAL = "elliptical"
+
+
+@unique
+class LivenessDecision(str, Enum):
+    """Anti-Spoofing Verdicts."""
+    REAL = "REAL"
+    FAKE = "FAKE"
+    UNCERTAIN = "UNCERTAIN"
+
+
+@unique
+class ClassroomROIType(str, Enum):
+    """Classroom Spatial Region of Interest."""
+    TEACHER = "TEACHER"
+    STUDENT = "STUDENT"
+    ALL = "ALL"
+
+
+@unique
+class VisitorStatus(str, Enum):
+    """Visitor Identity Validity States."""
+    APPROVED = "APPROVED"
+    PENDING = "PENDING"
+    EXPIRED = "EXPIRED"
+    REVOKED = "REVOKED"
+
+
+@unique
+class SubjectType(str, Enum):
+    """Subject Classification for Smart Campus."""
+    STUDENT = "STUDENT"
+    TEACHER = "TEACHER"
+    STAFF = "STAFF"
+    VISITOR = "VISITOR"
+
+
+@unique
+class FaceFeedbackCode(str, Enum):
+    """Zero-Hardcode Standard Verification & Enrollment Feedback Codes."""
+    FACE_NOT_DETECTED = "FACE_NOT_DETECTED"
+    MULTIPLE_FACES_DETECTED = "MULTIPLE_FACES_DETECTED"
+    MASK_DETECTED = "MASK_DETECTED"
+    SUNGLASSES_DETECTED = "SUNGLASSES_DETECTED"
+    HEAD_PITCH_UNBALANCED = "HEAD_PITCH_UNBALANCED"
+    HEAD_TURN_STRAIGHT_REQUIRED = "HEAD_TURN_STRAIGHT_REQUIRED"
+    HEAD_TURN_LEFT_REQUIRED = "HEAD_TURN_LEFT_REQUIRED"
+    HEAD_TURN_RIGHT_REQUIRED = "HEAD_TURN_RIGHT_REQUIRED"
+    HEAD_TURN_LEFT_TOO_DEEP = "HEAD_TURN_LEFT_TOO_DEEP"
+    HEAD_TURN_RIGHT_TOO_DEEP = "HEAD_TURN_RIGHT_TOO_DEEP"
+    QUALITY_SCORE_TOO_LOW = "QUALITY_SCORE_TOO_LOW"
+    ENROLL_SUCCESS = "ENROLL_SUCCESS"
+    EXTRACTION_ERROR = "EXTRACTION_ERROR"
+
 

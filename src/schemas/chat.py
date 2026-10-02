@@ -24,6 +24,7 @@ class ChatRequest(BaseModel):
     stream: bool = Field(default=False, description="Enable Server-Sent Events (SSE) streaming")
     system_prompt: Optional[str] = Field(default=None, description="Optional system instruction override")
     context_window: Optional[int] = Field(default=None, description="KV cache context limit")
+    response_format: Optional[Dict[str, Any]] = Field(default=None, description="Structured output format (e.g. {'type': 'json_object'})")
 
 
 class ChatUsage(BaseModel):
@@ -47,3 +48,5 @@ class StreamChunk(BaseModel):
     id: str
     delta: str
     finish_reason: Optional[str] = None
+    model: Optional[str] = None
+    provider: Optional[ModelProvider] = None

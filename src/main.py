@@ -29,11 +29,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(
-    title=f"Enterprise AI Platform ({settings.APP_NAME})",
+    title=f"Enterprise Golden Standard AI Platform ({settings.APP_NAME})",
     description=(
-        "Nền tảng Trí tuệ Nhân tạo Chuẩn Mực Doanh Nghiệp đa bộ máy: "
-        "LLM Gateway, Hybrid RAG (BGE-M3 + BM25 + Reranker), Vision & FDI Form Station, "
-        "Text-to-SQL Analytics Sandbox, Faster-Whisper STT, và ReAct Autonomous Agents."
+        "Enterprise Golden Standard AI Multi-Engine Platform: "
+        "LLM Gateway (vLLM PagedAttention AWQ), Hybrid RAG (BGE-M3 + BM25 + Reranker), "
+        "Vision & FDI Form Station, Text-to-SQL Analytics Sandbox, Faster-Whisper STT, "
+        "ReAct Autonomous Agents, Intelligent Chat CRM, and Face Biometrics & Identity Engine (UniFace)."
     ),
     version="1.0.0",
     docs_url="/docs",
@@ -51,9 +52,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── 2. Request Timing and Telemetry Middleware ──────────────────────────────
+# ── 2. Request Language (i18n) & Telemetry Middleware ───────────────────────
+from core.i18n import set_request_language, get_message
+
+
 @app.middleware("http")
-async def telemetry_middleware(request: Request, call_next):
+async def language_and_telemetry_middleware(request: Request, call_next):
+    # Detect language from header (X-Language, Accept-Language) or query param
+    raw_lang = (
+        request.headers.get("X-Language")
+        or request.headers.get("Accept-Language")
+        or request.query_params.get("lang")
+    )
+    set_request_language(raw_lang)
+
     start_time = time.time()
     endpoint = request.url.path
     method = request.method
@@ -76,13 +88,21 @@ async def telemetry_middleware(request: Request, call_next):
 @app.exception_handler(BaseAIException)
 async def ai_exception_handler(request: Request, exc: BaseAIException):
     logger.warning("AI Platform Exception caught", extra={"error_code": exc.error_code.value, "error_detail": exc.message})
+    raw_lang = (
+        request.headers.get("X-Language")
+        or request.headers.get("Accept-Language")
+        or request.query_params.get("lang")
+    )
+    lang = set_request_language(raw_lang)
+    translated_msg = get_message(exc.message, lang=lang)
     return JSONResponse(
         status_code=exc.status_code,
         content=ApiResponse.error(
-            message=exc.message,
+            message=translated_msg,
             error_code=exc.error_code,
             status_code=exc.status_code,
-            metadata=exc.details
+            metadata=exc.details,
+            lang=lang,
         ).model_dump()
     )
 
@@ -90,13 +110,21 @@ async def ai_exception_handler(request: Request, exc: BaseAIException):
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
     logger.error("Unhandled Internal Server Error", extra={"error": str(exc), "path": request.url.path})
+    raw_lang = (
+        request.headers.get("X-Language")
+        or request.headers.get("Accept-Language")
+        or request.query_params.get("lang")
+    )
+    lang = set_request_language(raw_lang)
+    translated_msg = get_message("INTERNAL_SERVER_ERROR", lang=lang)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=ApiResponse.error(
-            message="Internal server error occurred on AI platform",
+            message=translated_msg,
             error_code=ErrorCode.INTERNAL_SERVER_ERROR,
             status_code=500,
-            metadata={"detail": str(exc)}
+            metadata={"detail": str(exc)},
+            lang=lang,
         ).model_dump()
     )
 
@@ -106,9 +134,11 @@ async def generic_exception_handler(request: Request, exc: Exception):
 async def health_check():
     return {
         "status": "UP",
-        "service": "miai",
+        "service": settings.APP_NAME,
         "env": settings.APP_ENV,
-        "ollama_base_url": settings.OLLAMA_BASE_URL,
+        "default_llm_provider": settings.DEFAULT_LLM_PROVIDER,
+        "vllm_base_url": settings.VLLM_BASE_URL,
+        "embedding_provider": settings.EMBEDDING_PROVIDER,
         "timestamp": int(time.time() * 1000)
     }
 
@@ -119,7 +149,7 @@ async def prometheus_metrics():
     return Response(content=metrics_data, media_type=content_type)
 
 
-@app.get("/", tags=["General"], summary="Cổng thông tin nền tảng miai")
+@app.get("/", tags=["General"], summary="miai platform information")
 async def root_info():
     return ApiResponse.success(
         data={
@@ -128,15 +158,17 @@ async def root_info():
             "documentation": "/docs",
             "openapi": "/openapi.json",
             "engines": [
-                "Unified LLM Gateway (Ollama RTX 3060 / OpenAI / Gemini / DeepSeek)",
+                "Unified LLM Gateway (vLLM RTX 3060 PagedAttention / OpenAI / Gemini / DeepSeek)",
                 "Hybrid RAG Engine (BGE-M3 Dense + BM25 Sparse + Reranker)",
                 "Vision OCR & FDI Form Station Engine",
                 "Text-to-SQL Analytics Sandbox & ECharts Generator",
                 "Speech-to-Text Audio Engine (Faster-Whisper CUDA)",
-                "Autonomous Agentic Workflow Engine (ReAct Graph & Tools)"
+                "Autonomous Agentic Workflow Engine (ReAct Graph & Tools)",
+                "Face Biometrics & Identity Engine (UniFace AdaFace / SCRFD / Liveness / Anonymization)",
+                "Intelligent Chat CRM Fast Order Assistant (LangGraph & NLU)"
             ]
         },
-        message="Welcome to Enterprise AI Platform (miai)"
+        message="WELCOME"
     )
 
 
