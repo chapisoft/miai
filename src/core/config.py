@@ -103,6 +103,9 @@ class Settings(BaseSettings):
     FACE_SIMILARITY_THRESHOLD: float = Field(default=0.60, description="Cosine similarity threshold for identity match")
     FACE_LIVENESS_THRESHOLD: float = Field(default=0.80, description="Confidence threshold for liveness verification")
     FACE_QUALITY_MIN_THRESHOLD: float = Field(default=0.50, description="Minimum eDifFIQA score to accept face image")
+    FACE_EXECUTION_PROVIDER: str = Field(default="CUDAExecutionProvider", description="Execution provider for Face Models: CUDAExecutionProvider, TensorrtExecutionProvider, CPUExecutionProvider")
+    FACE_DEVICE: str = Field(default="cuda", description="Device for face embedding and matching: cuda, cpu")
+
 
 
 settings = Settings()

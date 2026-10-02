@@ -26,8 +26,10 @@ class FaceLivenessChecker:
             return cls._instance
 
         try:
+            from core.config import settings
             from uniface.spoofing import MiniFASNet
-            cls._instance = MiniFASNet()
+            providers = [settings.FACE_EXECUTION_PROVIDER, "TensorrtExecutionProvider", "CPUExecutionProvider"]
+            cls._instance = MiniFASNet(providers=providers)
             return cls._instance
         except Exception as e:
             raise FaceBiometricsException(

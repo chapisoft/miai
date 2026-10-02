@@ -17,5 +17,7 @@ python-json-logger==2.0.7
 sqlparse==0.4.4
 pytest==8.1.1
 pytest-asyncio==0.23.6
-uniface[cpu]>=4.0.0
+torch>=2.2.0
+onnxruntime-gpu>=1.17.0
+uniface>=4.0.0
 

@@ -256,3 +256,39 @@ class FaceEnrollResponse(BaseModel):
     landmarks: List[LandmarkPointDto] = Field(default_factory=list, description="5 canonical facial landmarks")
     embedding: Optional[List[float]] = Field(default=None, description="512-D L2-normalized embedding vector")
     processing_time_ms: float = Field(default=0.0, description="Processing latency in milliseconds")
+
+
+# ── 10. Surveillance Stream Schemas ──────────────────────────────────────────
+
+class SurveillanceRecognizeRequest(BaseModel):
+    """CCTV Surveillance face recognition and feature extraction."""
+    image_base64: str = Field(description="CCTV frame image as Base64 string")
+    min_confidence: float = Field(default=0.30, description="Minimum detection confidence threshold")
+    min_quality: float = Field(default=0.20, description="Minimum quality score threshold")
+    max_faces: int = Field(default=5, description="Maximum faces to process")
+    select_largest: bool = Field(default=True, description="Prioritize largest face in frame")
+
+
+class SurveillanceFaceItemDto(BaseModel):
+    bbox: Dict[str, float] = Field(description="Bounding box dict x1, y1, x2, y2")
+    norm_x1: float = Field(default=0.0)
+    norm_y1: float = Field(default=0.0)
+    norm_x2: float = Field(default=0.0)
+    norm_y2: float = Field(default=0.0)
+    norm_w: float = Field(default=0.0)
+    norm_h: float = Field(default=0.0)
+    confidence: float = Field(default=1.0)
+    quality_score: float = Field(default=0.0)
+    yaw: float = Field(default=0.0)
+    pitch: float = Field(default=0.0)
+    roll: float = Field(default=0.0)
+    landmarks: List[Dict[str, float]] = Field(default_factory=list)
+    embedding: Optional[List[float]] = Field(default=None)
+
+
+class SurveillanceRecognizeResponse(BaseModel):
+    faces: List[SurveillanceFaceItemDto] = Field(default_factory=list)
+    total_faces: int = Field(default=0)
+    image_width: int = Field(default=0)
+    image_height: int = Field(default=0)
+    processing_time_ms: float = Field(default=0.0)

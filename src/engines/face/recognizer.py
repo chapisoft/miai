@@ -30,26 +30,27 @@ class FaceRecognizer:
             return cls._instances[key]
 
         try:
+            from core.config import settings
+            providers = [settings.FACE_EXECUTION_PROVIDER, "TensorrtExecutionProvider", "CPUExecutionProvider"]
+
             if recognizer_type == FaceRecognizerType.ADAFACE_IR50:
                 from uniface.recognition import AdaFace
-                from uniface.constants import AdaFaceWeights
-                # Use IR_18 or IR_50 as configured
-                recognizer = AdaFace()
+                recognizer = AdaFace(providers=providers)
             elif recognizer_type == FaceRecognizerType.ARCFACE_RESNET50:
                 from uniface.recognition import ArcFace
                 from uniface.constants import ArcFaceWeights
-                recognizer = ArcFace(model_name=ArcFaceWeights.RESNET)
+                recognizer = ArcFace(model_name=ArcFaceWeights.RESNET, providers=providers)
             elif recognizer_type == FaceRecognizerType.ARCFACE_MOBILENET:
                 from uniface.recognition import ArcFace
                 from uniface.constants import ArcFaceWeights
-                recognizer = ArcFace(model_name=ArcFaceWeights.MNET)
+                recognizer = ArcFace(model_name=ArcFaceWeights.MNET, providers=providers)
             elif recognizer_type == FaceRecognizerType.EDGEFACE_XXS:
                 from uniface.recognition import EdgeFace
                 from uniface.constants import EdgeFaceWeights
-                recognizer = EdgeFace(model_name=EdgeFaceWeights.XXS)
+                recognizer = EdgeFace(model_name=EdgeFaceWeights.XXS, providers=providers)
             else:
                 from uniface.recognition import AdaFace
-                recognizer = AdaFace()
+                recognizer = AdaFace(providers=providers)
 
             cls._instances[key] = recognizer
             return recognizer

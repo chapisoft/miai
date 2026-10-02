@@ -31,21 +31,24 @@ class FaceDetector:
             return cls._instances[key]
 
         try:
+            from core.config import settings
+            providers = [settings.FACE_EXECUTION_PROVIDER, "TensorrtExecutionProvider", "CPUExecutionProvider"]
+
             if detector_type == FaceDetectorType.SCRFD:
                 from uniface.detection import SCRFD
-                detector = SCRFD(confidence_threshold=confidence_threshold)
+                detector = SCRFD(confidence_threshold=confidence_threshold, providers=providers)
             elif detector_type == FaceDetectorType.RETINAFACE:
                 from uniface.detection import RetinaFace
-                detector = RetinaFace(confidence_threshold=confidence_threshold)
+                detector = RetinaFace(confidence_threshold=confidence_threshold, providers=providers)
             elif detector_type == FaceDetectorType.CENTERFACE:
                 from uniface.detection import CenterFace
-                detector = CenterFace(confidence_threshold=confidence_threshold)
+                detector = CenterFace(confidence_threshold=confidence_threshold, providers=providers)
             elif detector_type == FaceDetectorType.YOLOV8_FACE:
                 from uniface.detection import YOLOv8Face
-                detector = YOLOv8Face(confidence_threshold=confidence_threshold)
+                detector = YOLOv8Face(confidence_threshold=confidence_threshold, providers=providers)
             else:
                 from uniface.detection import SCRFD
-                detector = SCRFD(confidence_threshold=confidence_threshold)
+                detector = SCRFD(confidence_threshold=confidence_threshold, providers=providers)
 
             cls._instances[key] = detector
             return detector

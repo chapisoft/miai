@@ -26,8 +26,10 @@ class FaceQualityScorer:
             return cls._instance
 
         try:
+            from core.config import settings
             from uniface.quality import EDifFIQA
-            cls._instance = EDifFIQA()
+            providers = [settings.FACE_EXECUTION_PROVIDER, "TensorrtExecutionProvider", "CPUExecutionProvider"]
+            cls._instance = EDifFIQA(providers=providers)
             return cls._instance
         except Exception as e:
             raise FaceBiometricsException(

@@ -22,8 +22,10 @@ class FaceAttributesAnalyzer:
     def get_headpose(cls):
         if cls._headpose_instance is None:
             try:
+                from core.config import settings
                 from uniface.headpose import HeadPose
-                cls._headpose_instance = HeadPose()
+                providers = [settings.FACE_EXECUTION_PROVIDER, "TensorrtExecutionProvider", "CPUExecutionProvider"]
+                cls._headpose_instance = HeadPose(providers=providers)
             except Exception:
                 cls._headpose_instance = None
         return cls._headpose_instance
@@ -32,8 +34,10 @@ class FaceAttributesAnalyzer:
     def get_fairface(cls):
         if cls._fairface_instance is None:
             try:
+                from core.config import settings
                 from uniface.attribute import FairFace
-                cls._fairface_instance = FairFace()
+                providers = [settings.FACE_EXECUTION_PROVIDER, "TensorrtExecutionProvider", "CPUExecutionProvider"]
+                cls._fairface_instance = FairFace(providers=providers)
             except Exception:
                 cls._fairface_instance = None
         return cls._fairface_instance
@@ -42,8 +46,10 @@ class FaceAttributesAnalyzer:
     def get_face_attrib(cls):
         if cls._attrib_instance is None:
             try:
+                from core.config import settings
                 from uniface.attribute import FaceAttribNet
-                cls._attrib_instance = FaceAttribNet()
+                providers = [settings.FACE_EXECUTION_PROVIDER, "TensorrtExecutionProvider", "CPUExecutionProvider"]
+                cls._attrib_instance = FaceAttribNet(providers=providers)
             except Exception:
                 cls._attrib_instance = None
         return cls._attrib_instance

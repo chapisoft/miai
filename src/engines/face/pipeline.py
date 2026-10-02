@@ -41,6 +41,9 @@ from schemas.face import (
     FaceEnrollResponse,
     FaceItemDto,
     FaceBoxDto,
+    SurveillanceRecognizeRequest,
+    SurveillanceRecognizeResponse,
+    SurveillanceFaceItemDto,
 )
 from engines.face.utils import decode_image, encode_image_base64, map_uniface_to_dto
 from core.i18n import get_message
@@ -566,6 +569,103 @@ class FaceEngineFacade:
             bbox=dto.bbox,
             landmarks=dto.landmarks,
             embedding=embedding_list,
+            processing_time_ms=round(elapsed_ms, 2),
+        )
+
+    @classmethod
+    def recognize_surveillance(cls, request: SurveillanceRecognizeRequest) -> SurveillanceRecognizeResponse:
+        """
+        Processes CCTV surveillance frame on GPU:
+        Face detection (SCRFD) -> eDifFIQA quality -> HeadPose (Yaw/Pitch/Roll) -> AdaFace 512-D embedding.
+        Optimized for moving persons in corridor / gate cameras with GPU hardware acceleration.
+        """
+        start_time = time.perf_counter()
+        image_np = decode_image(request.image_base64)
+        h, w = image_np.shape[:2]
+
+        faces = FaceDetector.detect(
+            image_np,
+            min_confidence=request.min_confidence,
+        )
+
+        if not faces:
+            elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+            return SurveillanceRecognizeResponse(
+                faces=[],
+                total_faces=0,
+                image_width=w,
+                image_height=h,
+                processing_time_ms=round(elapsed_ms, 2),
+            )
+
+        # Sort by bounding box area (largest first) if requested
+        if request.select_largest:
+            faces = sorted(faces, key=lambda f: (f.bbox[2] - f.bbox[0]) * (f.bbox[3] - f.bbox[1]), reverse=True)
+
+        faces = faces[: request.max_faces]
+        items: List[SurveillanceFaceItemDto] = []
+
+        for face in faces:
+            b = face.bbox
+            x1, y1, x2, y2 = float(b[0]), float(b[1]), float(b[2]), float(b[3])
+            conf = float(face.confidence)
+
+            # Normalized coordinates [0.0 - 1.0]
+            norm_x1 = max(0.0, min(1.0, x1 / w))
+            norm_y1 = max(0.0, min(1.0, y1 / h))
+            norm_x2 = max(0.0, min(1.0, x2 / w))
+            norm_y2 = max(0.0, min(1.0, y2 / h))
+            norm_w = max(0.0, min(1.0, (x2 - x1) / w))
+            norm_h = max(0.0, min(1.0, (y2 - y1) / h))
+
+            # Quality Assessment on GPU
+            quality_score = FaceQualityScorer.assess_quality(image_np, face.landmarks)
+
+            # Head Pose on GPU
+            head_pose = FaceAttributesAnalyzer.estimate_head_pose(image_np, face.bbox)
+            yaw = float(head_pose.yaw) if head_pose else 0.0
+            pitch = float(head_pose.pitch) if head_pose else 0.0
+            roll = float(head_pose.roll) if head_pose else 0.0
+
+            # Landmarks format
+            lm_list = []
+            if hasattr(face, "landmarks") and face.landmarks is not None:
+                for lm in face.landmarks:
+                    lm_list.append({"x": float(lm[0]), "y": float(lm[1])})
+
+            # Feature Embedding on GPU if quality passes
+            emb_list = None
+            if quality_score >= request.min_quality:
+                try:
+                    emb = FaceRecognizer.extract_embedding(image_np, face.landmarks)
+                    emb_list = emb.tolist() if hasattr(emb, "tolist") else list(emb)
+                except Exception:
+                    pass
+
+            item = SurveillanceFaceItemDto(
+                bbox={"x1": x1, "y1": y1, "x2": x2, "y2": y2},
+                norm_x1=round(norm_x1, 4),
+                norm_y1=round(norm_y1, 4),
+                norm_x2=round(norm_x2, 4),
+                norm_y2=round(norm_y2, 4),
+                norm_w=round(norm_w, 4),
+                norm_h=round(norm_h, 4),
+                confidence=round(conf, 4),
+                quality_score=round(quality_score, 4),
+                yaw=round(yaw, 2),
+                pitch=round(pitch, 2),
+                roll=round(roll, 2),
+                landmarks=lm_list,
+                embedding=emb_list,
+            )
+            items.append(item)
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+        return SurveillanceRecognizeResponse(
+            faces=items,
+            total_faces=len(items),
+            image_width=w,
+            image_height=h,
             processing_time_ms=round(elapsed_ms, 2),
         )
 

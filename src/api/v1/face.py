@@ -27,6 +27,8 @@ from schemas.face import (
     VisitorRemoveResponse,
     FaceEnrollRequest,
     FaceEnrollResponse,
+    SurveillanceRecognizeRequest,
+    SurveillanceRecognizeResponse,
 )
 from engines.face.pipeline import FaceEngineFacade
 
@@ -176,3 +178,17 @@ async def enroll_face(
     """
     result = FaceEngineFacade.enroll_face(request)
     return ApiResponse.success(data=result, message=result.feedback_code.value)
+
+
+@router.post(
+    "/surveillance",
+    response_model=ApiResponse[SurveillanceRecognizeResponse],
+    summary="CCTV surveillance stream face recognition and embedding extraction on GPU",
+)
+async def recognize_surveillance(
+    request: SurveillanceRecognizeRequest,
+    current_user: dict = Depends(get_current_user),
+) -> ApiResponse[SurveillanceRecognizeResponse]:
+    """Extracts faces, quality, pose, and 512-D embeddings from CCTV frame on GPU."""
+    result = FaceEngineFacade.recognize_surveillance(request)
+    return ApiResponse.success(data=result, message=ErrorCode.SUCCESS.value)
